@@ -1,5 +1,5 @@
-from src.lexer import Lexer
-from src.token import TokenType
+from sloth.lexer import Lexer
+from sloth.token import TokenType
 
 
 def test_init_token():
@@ -14,6 +14,7 @@ def test_init_token():
         (TokenType.RBRACE, "}"),
         (TokenType.COMMA, ","),
         (TokenType.SEMICOLON, ";"),
+        (TokenType.EOF, ""),
     ]
 
     lexer = Lexer(input_)

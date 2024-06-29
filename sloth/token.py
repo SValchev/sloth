@@ -1,10 +1,13 @@
-from enum import StrEnum
+from enum import StrEnum, auto
 from dataclasses import dataclass
 
 
 class TokenType(StrEnum):
-    EOF = "EOF"
-    ILLEGAL = "ILLEGAL"
+    EOF = (auto(),)
+    ILLEGAL = (auto(),)
+
+    IDENT = (auto(),)
+    INT = (auto(),)
 
     ASSIGN = "="
     PLUS = "+"
@@ -19,7 +22,7 @@ class TokenType(StrEnum):
     RBRACE = "}"
 
     VAR = "var"
-    FUNCTION = "func"
+    FUNC = "func"
 
 
 @dataclass(frozen=True)
