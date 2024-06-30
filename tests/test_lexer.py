@@ -1,5 +1,5 @@
-from sloth.lexer import Lexer
 from sloth.token import TokenType
+from tests.helpers import validate_input
 
 
 def test_next_token():
@@ -14,16 +14,19 @@ def test_next_token():
     """
 
     expected = [
+        # Row one
         (TokenType.VAR, "var"),
         (TokenType.IDENT, "forty"),
         (TokenType.ASSIGN, "="),
         (TokenType.INT, "40"),
         (TokenType.SEMICOLON, ";"),
+        # Rwo two
         (TokenType.VAR, "var"),
         (TokenType.IDENT, "two"),
         (TokenType.ASSIGN, "="),
         (TokenType.INT, "2"),
         (TokenType.SEMICOLON, ";"),
+        # Function
         (TokenType.VAR, "var"),
         (TokenType.IDENT, "add"),
         (TokenType.ASSIGN, "="),
@@ -39,6 +42,7 @@ def test_next_token():
         (TokenType.IDENT, "y"),
         (TokenType.RBRACE, "}"),
         (TokenType.SEMICOLON, ";"),
+        # result
         (TokenType.VAR, "var"),
         (TokenType.IDENT, "result"),
         (TokenType.ASSIGN, "="),
@@ -51,10 +55,36 @@ def test_next_token():
         (TokenType.SEMICOLON, ";"),
     ]
 
-    lexer = Lexer(input_)
+    validate_input(input_, expected)
 
-    for token_type, literal in expected:
-        token = lexer.next_token()
 
-        assert token.literal == literal
-        assert token.type == token_type
+def test_next_token():
+    input_ = """if(5 > 10){
+        return true
+    } else {
+        return false
+    }
+    """
+
+    expected = [
+        # Row one
+        (TokenType.IF, "if"),
+        (TokenType.LPAREN, "("),
+        (TokenType.INT, "5"),
+        (TokenType.GT, ">"),
+        (TokenType.INT, "10"),
+        # Rwo two
+        (TokenType.LBRACE, "{"),
+        (TokenType.RETURN, "return"),
+        (TokenType.TRUE, "true"),
+        (TokenType.RBRACE, "}"),
+        (TokenType.ELSE, "else"),
+        # Function
+        (TokenType.LBRACE, "{"),
+        (TokenType.RETURN, "return"),
+        (TokenType.FALSE, "false"),
+        (TokenType.RBRACE, "}"),
+    ]   
+    
+    validate_input(input_, expected)
+

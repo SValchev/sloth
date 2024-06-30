@@ -3,7 +3,7 @@ from sloth.token import TokenType
 
 
 def test_init_token():
-    input_ = "=+(){},;"
+    input_ = "=+(){},;><!*/"
 
     expected = [
         (TokenType.ASSIGN, "="),
@@ -14,6 +14,11 @@ def test_init_token():
         (TokenType.RBRACE, "}"),
         (TokenType.COMMA, ","),
         (TokenType.SEMICOLON, ";"),
+        (TokenType.GT, ">"),
+        (TokenType.LT, "<"),
+        (TokenType.BANG, "!"),
+        (TokenType.ASTERISK, "*"),
+        (TokenType.SLASH, "/"),
         (TokenType.EOF, ""),
     ]
 

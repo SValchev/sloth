@@ -65,6 +65,16 @@ class Lexer:
                 token = Token(TokenType.SEMICOLON, self._char)
             case TokenType.COMMA:
                 token = Token(TokenType.COMMA, self._char)
+            case TokenType.GT:
+                token = Token(TokenType.GT, self._char)
+            case TokenType.LT:
+                token = Token(TokenType.LT, self._char)
+            case TokenType.BANG:
+                token = Token(TokenType.BANG, self._char)
+            case TokenType.ASTERISK:
+                token = Token(TokenType.ASTERISK, self._char)
+            case TokenType.SLASH:
+                token = Token(TokenType.SLASH, self._char)
             case "\00":
                 token = Token(TokenType.EOF, "")
             case _:

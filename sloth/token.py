@@ -4,6 +4,21 @@ from dataclasses import dataclass
 
 
 class TokenType(StrEnum):
+    """
+    ==
+    !=
+    return
+    if
+    else
+    true
+    false
+    >
+    <
+    !
+    *
+    /
+    """
+
     EOF = auto()
     ILLEGAL = auto()
 
@@ -13,6 +28,11 @@ class TokenType(StrEnum):
     ASSIGN = "="
     PLUS = "+"
     MINUS = "-"
+    GT = ">"
+    LT = "<"
+    BANG = "!"
+    ASTERISK = "*"
+    SLASH = "/"
 
     SEMICOLON = ";"
     COMMA = ","
@@ -25,10 +45,18 @@ class TokenType(StrEnum):
     VAR = "var"
     FUNC = "func"
 
+    RETURN = 'return'
+    IF = "if"
+    ELSE = "else"
+    TRUE = "true"
+    FALSE = "false" 
 
 _keywords: dict[TokenType | str, TokenType] = {
     TokenType.FUNC: TokenType.FUNC,
     TokenType.VAR: TokenType.VAR,
+    #TokenType.RETURN: TokenType.RETURN,
+    #TokenType.IF: TokenType.IF,
+    #TokenType.ELSE: TokenType.ELSE,
 }
 
 
