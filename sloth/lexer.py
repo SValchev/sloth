@@ -43,12 +43,21 @@ class Lexer:
         while self._char.isspace():
             self._read_char()
 
+    def _peek_char(self) -> str:
+        if self._read_position >= len(self._input):
+            return "\00"
+        return self._input[self._read_position]
+
     def next_token(self) -> Token:
         self._consume_spaces()
         token = None
         match self._char:
             case TokenType.ASSIGN:
-                token = Token(TokenType.ASSIGN, self._char)
+                if self._peek_char() == '=':
+                    self._read_char()
+                    token = Token(TokenType.EQ, TokenType.EQ)
+                else:
+                    token = Token(TokenType.ASSIGN, self._char)
             case TokenType.PLUS:
                 token = Token(TokenType.PLUS, self._char)
             case TokenType.LPAREN:
@@ -68,7 +77,11 @@ class Lexer:
             case TokenType.LT:
                 token = Token(TokenType.LT, self._char)
             case TokenType.BANG:
-                token = Token(TokenType.BANG, self._char)
+                if self._peek_char() == '=':
+                    self._read_char()
+                    token = Token(TokenType.NOT_EQ, TokenType.NOT_EQ)
+                else:
+                    token = Token(TokenType.BANG, self._char)
             case TokenType.ASTERISK:
                 token = Token(TokenType.ASTERISK, self._char)
             case TokenType.SLASH:
@@ -83,6 +96,6 @@ class Lexer:
                     return Token(TokenType.INT, self._read_digit())
                 else:
                     token = Token(TokenType.ILLEGAL, "")
-
+        
         self._read_char()
         return token

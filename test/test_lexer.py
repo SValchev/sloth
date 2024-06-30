@@ -73,6 +73,8 @@ def test_next_token_input2():
         (TokenType.INT, "5"),
         (TokenType.GT, ">"),
         (TokenType.INT, "10"),
+
+        (TokenType.RPAREN, ")"),
         # Rwo two
         (TokenType.LBRACE, "{"),
         (TokenType.RETURN, "return"),
@@ -84,6 +86,24 @@ def test_next_token_input2():
         (TokenType.RETURN, "return"),
         (TokenType.FALSE, "false"),
         (TokenType.RBRACE, "}"),
+    ]
+
+    validate_input(input_, expected)
+
+def test_next_token_equal():
+    input_ = """1 == 42
+    1 != 42
+    """
+
+    expected = [
+        # Row one
+        (TokenType.INT, "1"),
+        (TokenType.EQ, "=="),
+        (TokenType.INT, "42"),
+        # Rwo two
+        (TokenType.INT, "1"),
+        (TokenType.NOT_EQ, "!="),
+        (TokenType.INT, "42"),
     ]
 
     validate_input(input_, expected)

@@ -11,11 +11,6 @@ class TokenType(StrEnum):
     else
     true
     false
-    >
-    <
-    !
-    *
-    /
     """
 
     EOF = auto()
@@ -32,6 +27,9 @@ class TokenType(StrEnum):
     BANG = "!"
     ASTERISK = "*"
     SLASH = "/"
+
+    EQ = "=="
+    NOT_EQ = "!="
 
     SEMICOLON = ";"
     COMMA = ","
@@ -54,9 +52,11 @@ class TokenType(StrEnum):
 _keywords: dict[TokenType | str, TokenType] = {
     TokenType.FUNC: TokenType.FUNC,
     TokenType.VAR: TokenType.VAR,
-    # TokenType.RETURN: TokenType.RETURN,
-    # TokenType.IF: TokenType.IF,
-    # TokenType.ELSE: TokenType.ELSE,
+    TokenType.RETURN: TokenType.RETURN,
+    TokenType.IF: TokenType.IF,
+    TokenType.ELSE: TokenType.ELSE,
+    TokenType.TRUE: TokenType.TRUE,
+    TokenType.FALSE: TokenType.FALSE,
 }
 
 
