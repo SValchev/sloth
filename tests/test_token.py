@@ -1,6 +1,8 @@
 from sloth.lexer import Lexer
 from sloth.token import TokenType
 
+from .helpers import validate_input
+
 
 def test_init_token():
     input_ = "=+(){},;><!*/"
@@ -22,10 +24,4 @@ def test_init_token():
         (TokenType.EOF, ""),
     ]
 
-    lexer = Lexer(input_)
-
-    for token_type, literal in expected:
-        token = lexer.next_token()
-
-        assert token.literal == literal
-        assert token.type == token_type
+    validate_input(input_, expected)

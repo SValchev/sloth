@@ -1,6 +1,6 @@
-from typing import Self
-from enum import StrEnum, auto
 from dataclasses import dataclass
+from enum import StrEnum, auto
+from typing import Self
 
 
 class TokenType(StrEnum):
@@ -45,18 +45,19 @@ class TokenType(StrEnum):
     VAR = "var"
     FUNC = "func"
 
-    RETURN = 'return'
+    RETURN = "return"
     IF = "if"
     ELSE = "else"
     TRUE = "true"
-    FALSE = "false" 
+    FALSE = "false"
+
 
 _keywords: dict[TokenType | str, TokenType] = {
     TokenType.FUNC: TokenType.FUNC,
     TokenType.VAR: TokenType.VAR,
-    #TokenType.RETURN: TokenType.RETURN,
-    #TokenType.IF: TokenType.IF,
-    #TokenType.ELSE: TokenType.ELSE,
+    # TokenType.RETURN: TokenType.RETURN,
+    # TokenType.IF: TokenType.IF,
+    # TokenType.ELSE: TokenType.ELSE,
 }
 
 

@@ -84,7 +84,6 @@ def test_next_token():
         (TokenType.RETURN, "return"),
         (TokenType.FALSE, "false"),
         (TokenType.RBRACE, "}"),
-    ]   
-    
-    validate_input(input_, expected)
+    ]
 
+    validate_input(input_, expected)

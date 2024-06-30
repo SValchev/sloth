@@ -1,4 +1,5 @@
 import string
+
 from .token import Token, TokenType
 
 
