@@ -1,4 +1,3 @@
-from sloth.lexer import Lexer
 from sloth.token import TokenType
 
 from .helpers import validate_input

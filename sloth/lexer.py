@@ -1,5 +1,3 @@
-import string
-
 from .token import Token, TokenType
 
 
@@ -46,7 +44,6 @@ class Lexer:
             self._read_char()
 
     def next_token(self) -> Token:
-
         self._consume_spaces()
         token = None
         match self._char:

@@ -1,8 +1,8 @@
 from sloth.token import TokenType
-from tests.helpers import validate_input
+from test.helpers import validate_input
 
 
-def test_next_token():
+def test_next_token_input1():
     input_ = """var  forty = 40;
     var two = 2;
     
@@ -58,7 +58,7 @@ def test_next_token():
     validate_input(input_, expected)
 
 
-def test_next_token():
+def test_next_token_input2():
     input_ = """if(5 > 10){
         return true
     } else {

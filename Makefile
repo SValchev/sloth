@@ -4,4 +4,4 @@ shell:
 
 .PHONY: format
 format:
-	poetry run -- black . && isort .
+	poetry run -- ruff check --fix && ruff format 

@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from enum import StrEnum, auto
-from typing import Self
 
 
 class TokenType(StrEnum):

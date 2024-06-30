@@ -5,7 +5,6 @@ from sloth.token import TokenType
 
 
 def validate_input(input_: str, expected: Tuple[TokenType, str]) -> None:
-
     lexer = Lexer(input_)
     for token_type, literal in expected:
         token = lexer.next_token()
