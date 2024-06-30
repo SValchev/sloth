@@ -1,5 +1,5 @@
 from sloth.token import TokenType
-from test.helpers import validate_input
+from tests.helpers import validate_input
 
 
 def test_next_token_input1():
@@ -73,7 +73,6 @@ def test_next_token_input2():
         (TokenType.INT, "5"),
         (TokenType.GT, ">"),
         (TokenType.INT, "10"),
-
         (TokenType.RPAREN, ")"),
         # Rwo two
         (TokenType.LBRACE, "{"),
@@ -89,6 +88,7 @@ def test_next_token_input2():
     ]
 
     validate_input(input_, expected)
+
 
 def test_next_token_equal():
     input_ = """1 == 42

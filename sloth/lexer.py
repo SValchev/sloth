@@ -53,7 +53,7 @@ class Lexer:
         token = None
         match self._char:
             case TokenType.ASSIGN:
-                if self._peek_char() == '=':
+                if self._peek_char() == "=":
                     self._read_char()
                     token = Token(TokenType.EQ, TokenType.EQ)
                 else:
@@ -77,7 +77,7 @@ class Lexer:
             case TokenType.LT:
                 token = Token(TokenType.LT, self._char)
             case TokenType.BANG:
-                if self._peek_char() == '=':
+                if self._peek_char() == "=":
                     self._read_char()
                     token = Token(TokenType.NOT_EQ, TokenType.NOT_EQ)
                 else:
@@ -96,6 +96,6 @@ class Lexer:
                     return Token(TokenType.INT, self._read_digit())
                 else:
                     token = Token(TokenType.ILLEGAL, "")
-        
+
         self._read_char()
         return token

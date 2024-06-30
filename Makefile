@@ -8,4 +8,4 @@ format:
 
 .PHONY: lint
 lint:
-	poetry run -- ruff check && mypy sloth test 
+	poetry run -- ruff check && mypy sloth tests
