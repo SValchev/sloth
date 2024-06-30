@@ -3,7 +3,7 @@ from sloth.token import TokenType
 
 
 def test_next_token():
-    input_ = """var forty = 40;
+    input_ = """var  forty = 40;
     var two = 2;
     
     var add = func(x, y) {

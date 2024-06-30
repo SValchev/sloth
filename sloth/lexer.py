@@ -1,3 +1,4 @@
+import string
 from .token import Token, TokenType
 
 
@@ -19,8 +20,33 @@ class Lexer:
         self._position = self._read_position
         self._read_position += 1
 
+    def _char_is_letter(self) -> bool:
+        return self._char.isalpha() or self._char == "_"
+
+    def _read_word(self) -> str:
+        position = self._position
+        while self._char_is_letter():
+            self._read_char()
+
+        return self._input[position : self._position]
+
+    def _char_is_digit(self) -> bool:
+        return self._char.isnumeric()
+
+    def _read_digit(self) -> str:
+        position = self._position
+        while self._char_is_digit():
+            self._read_char()
+
+        return self._input[position : self._position]
+
+    def _consume_spaces(self) -> None:
+        while self._char.isspace():
+            self._read_char()
+
     def next_token(self) -> Token:
 
+        self._consume_spaces()
         token = None
         match self._char:
             case TokenType.ASSIGN:
@@ -42,7 +68,13 @@ class Lexer:
             case "\00":
                 token = Token(TokenType.EOF, "")
             case _:
-                raise NotImplementedError()
+                if self._char_is_letter():
+                    # Can return keyword or identifier
+                    return Token.from_word(self._read_word())
+                elif self._char_is_digit():
+                    return Token(TokenType.INT, self._read_digit())
+                else:
+                    token = Token(TokenType.ILLEGAL, "")
 
         self._read_char()
         return token
