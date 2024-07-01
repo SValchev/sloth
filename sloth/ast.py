@@ -1,24 +1,17 @@
-from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Protocol
 from .token import Token
 
 
-class Node(ABC):
-    @abstractmethod
-    def token_literal(self) -> str:
-        pass
+class Node(Protocol):
+    def token_literal(self) -> str: ...
 
 
-class Statement(Node):
-    @abstractmethod
-    def _statement_node(self):
-        pass
+class Statement(Node, Protocol):
+    def statement_node(self): ...
 
 
-class Expression(Node):
-    @abstractmethod
-    def _expression_node(self):
-        pass
+class Expression(Node, Protocol):
+    def expression_node(self): ...
 
 
 class Program(Node):
@@ -39,8 +32,8 @@ class Identifier(Expression):
         self.token = token
         self.value = value
 
-    def _expression_node(self):
-        return super()._expression_node()
+    def expression_node(self):
+        raise NotImplementedError()
 
     def token_literal(self) -> str:
         return self.token.literal
@@ -57,5 +50,17 @@ class VarStatement(Statement):
     def token_literal(self) -> str:
         return self.token.literal
 
-    def _statement_node(self):
-        return super()._statement_node()
+    def statement_node(self):
+        raise NotImplementedError()
+
+
+class ReturnStatement(Statement):
+    def __init__(self, token, expression: Optional[Expression] = None) -> None:
+        self.token: Token = token
+        self.expression: Optional[Expression] = expression
+
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def statement_node(self):
+        raise NotImplementedError()
