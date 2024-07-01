@@ -32,8 +32,8 @@ class Program(Node):
 
 class Identifier(Expression):
     def __init__(self, token: Token, value: str) -> None:
-        self._token = token
-        self._value = value
+        self.token = token
+        self.value = value
 
     def _expression_node(self):
         return super()._expression_node()
@@ -41,9 +41,9 @@ class Identifier(Expression):
 
 class VarStatement(Statement):
     def __init__(self, token: Token, name: Identifier, value: Expression) -> None:
-        self._token: Token = token
-        self._name: Identifier = name
-        self._value: Expression = value
+        self.token: Token = token
+        self.name: Identifier = name
+        self.value: Expression = value
 
     def token_literal(self) -> str:
         return self._token.literal
