@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 from .token import Token
 
 
@@ -29,6 +30,9 @@ class Program(Node):
             return ""
         return self.statements[0].token_literal()
 
+    def add_statement(self, statement: Statement):
+        self.statements.append(statement)
+
 
 class Identifier(Expression):
     def __init__(self, token: Token, value: str) -> None:
@@ -38,12 +42,20 @@ class Identifier(Expression):
     def _expression_node(self):
         return super()._expression_node()
 
+    def token_literal(self) -> str:
+        return super().token_literal()
+
 
 class VarStatement(Statement):
-    def __init__(self, token: Token, name: Identifier, value: Expression) -> None:
+    def __init__(
+        self, token: Token, name: Identifier, value: Optional[Expression] = None
+    ) -> None:
         self.token: Token = token
         self.name: Identifier = name
-        self.value: Expression = value
+        self.value: Optional[Expression] = value
 
     def token_literal(self) -> str:
         return self._token.literal
+
+    def _statement_node(self):
+        return super()._statement_node()

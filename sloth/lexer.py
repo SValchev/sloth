@@ -10,44 +10,6 @@ class Lexer:
 
         self._read_char()
 
-    def _read_char(self) -> None:
-        if self._read_position >= len(self._input):
-            self._char = "\00"
-        else:
-            self._char = self._input[self._read_position]
-
-        self._position = self._read_position
-        self._read_position += 1
-
-    def _char_is_letter(self) -> bool:
-        return self._char.isalpha() or self._char == "_"
-
-    def _read_word(self) -> str:
-        position = self._position
-        while self._char_is_letter():
-            self._read_char()
-
-        return self._input[position : self._position]
-
-    def _char_is_digit(self) -> bool:
-        return self._char.isnumeric()
-
-    def _read_digit(self) -> str:
-        position = self._position
-        while self._char_is_digit():
-            self._read_char()
-
-        return self._input[position : self._position]
-
-    def _consume_spaces(self) -> None:
-        while self._char.isspace():
-            self._read_char()
-
-    def _peek_char(self) -> str:
-        if self._read_position >= len(self._input):
-            return "\00"
-        return self._input[self._read_position]
-
     def next_token(self) -> Token:
         self._consume_spaces()
         token = None
@@ -99,3 +61,41 @@ class Lexer:
 
         self._read_char()
         return token
+
+    def _read_char(self) -> None:
+        if self._read_position >= len(self._input):
+            self._char = "\00"
+        else:
+            self._char = self._input[self._read_position]
+
+        self._position = self._read_position
+        self._read_position += 1
+
+    def _char_is_letter(self) -> bool:
+        return self._char.isalpha() or self._char == "_"
+
+    def _read_word(self) -> str:
+        position = self._position
+        while self._char_is_letter():
+            self._read_char()
+
+        return self._input[position : self._position]
+
+    def _char_is_digit(self) -> bool:
+        return self._char.isnumeric()
+
+    def _read_digit(self) -> str:
+        position = self._position
+        while self._char_is_digit():
+            self._read_char()
+
+        return self._input[position : self._position]
+
+    def _consume_spaces(self) -> None:
+        while self._char.isspace():
+            self._read_char()
+
+    def _peek_char(self) -> str:
+        if self._read_position >= len(self._input):
+            return "\00"
+        return self._input[self._read_position]

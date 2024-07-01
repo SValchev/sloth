@@ -3,16 +3,6 @@ from enum import StrEnum, auto
 
 
 class TokenType(StrEnum):
-    """
-    ==
-    !=
-    return
-    if
-    else
-    true
-    false
-    """
-
     EOF = auto()
     ILLEGAL = auto()
 
