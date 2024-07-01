@@ -7,8 +7,8 @@ class Parser:
     def __init__(self, lexer: Lexer) -> None:
         self._lexer: Lexer = lexer
 
-        self._token: Token = None
-        self._peek_token: Token = None
+        self._token: Token
+        self._peek_token: Token
 
         self._next_token()
         self._next_token()

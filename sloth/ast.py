@@ -43,7 +43,7 @@ class Identifier(Expression):
         return super()._expression_node()
 
     def token_literal(self) -> str:
-        return super().token_literal()
+        return self.token.literal 
 
 
 class VarStatement(Statement):
@@ -55,7 +55,7 @@ class VarStatement(Statement):
         self.value: Optional[Expression] = value
 
     def token_literal(self) -> str:
-        return self._token.literal
+        return self.token.literal
 
     def _statement_node(self):
         return super()._statement_node()
