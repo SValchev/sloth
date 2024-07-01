@@ -3,13 +3,18 @@ from sloth.ast import Identifier, Program, VarStatement
 from .lexer import Lexer
 
 
+class ParsingError:
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+
 class Parser:
     def __init__(self, lexer: Lexer) -> None:
+        self.errors: list[ParsingError] = []
+
         self._lexer: Lexer = lexer
-
-        self._token: Token
-        self._peek_token: Token
-
+        self._token: Token = None
+        self._peek_token: Token = None
         self._next_token()
         self._next_token()
 
@@ -43,20 +48,29 @@ class Parser:
     def _parse_var_stmt(self) -> VarStatement:
         var_token = self._token
 
-        if not self._peek_token_is(TokenType.IDENT):
-            raise ValueError()
+        if not self._expect_peek(TokenType.IDENT):
+            return None
 
-        ident = self._next_token()
+        ident_stmt = Identifier(self._token, self._token.literal)
 
-        if not self._peek_token_is(TokenType.ASSIGN):
-            raise ValueError()
+        if not self._expect_peek(TokenType.ASSIGN):
+            return None
 
         # Loop until the end of the expression
         while self._token_is(TokenType.SEMICOLON):
             self._next_token()
 
-        ident_stmt = Identifier(ident, ident.literal)
         return VarStatement(token=var_token, name=ident_stmt)
+
+    def _expect_peek(self, expect: TokenType) -> bool:
+        if not self._peek_token_is(expect):
+            self.errors.append(
+                f"Expected peek token to be {expect}, but peek was {self._peek_token.type}"
+            )
+            return False
+
+        self._next_token()
+        return True
 
     def _token_is(self, other: TokenType):
         return self._token.type == other
