@@ -10,6 +10,9 @@ class ParsingError:
 
 
 class Parser:
+    _PREFIX_REGISTRY = {}
+    _INFIX_REGISTRY = {}
+    
     def __init__(self, lexer: Lexer) -> None:
         self.errors: list[ParsingError] = []
         self._lexer: Lexer = lexer
