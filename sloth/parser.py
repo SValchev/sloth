@@ -14,8 +14,8 @@ class Parser:
         self.errors: list[ParsingError] = []
         self._lexer: Lexer = lexer
 
-        self._token: Token
-        self._peek_token: Token
+        self._token: Token = None
+        self._peek_token: Token = None
         self._next_token()
         self._next_token()
 

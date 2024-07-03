@@ -1,4 +1,4 @@
-from sloth.ast import ReturnStatement, VarStatement
+from sloth.ast import Identifier, ReturnStatement, VarStatement
 from sloth.parser import Parser
 from sloth.token import TokenType
 
@@ -22,9 +22,11 @@ def test_var_parser():
         assert isinstance(stmt, VarStatement)
         assert stmt.token.type == TokenType.VAR
         assert stmt.token.literal == "var"
-
-        assert stmt.name.token.type == TokenType.IDENT
-        assert stmt.name.value == expected_ident
+        
+        ident = stmt.name 
+        assert isinstance(ident, Identifier) 
+        assert ident.token.type == TokenType.IDENT
+        assert ident.value == expected_ident
 
 
 def test_parser_generate_errors_with_var_statement():
@@ -64,15 +66,18 @@ def test_identifier_expression_parser():
     var b = 10;
     """
 
+    expected_idents = ['a', 'b']
+
     parser = Parser.from_input(input_)
     program = parser.parse_program()
 
-    assert len(program.statements) == 3
+    assert len(program.statements) == 2
     assert not parser.errors
-
-    for stmt in program.statements:
-        assert isinstance(stmt, ReturnStatement)
-        assert stmt.token.type == TokenType.RETURN
-        assert stmt.token.literal == "return"
-
-        assert not stmt.expression
+    
+    
+     
+    for ei, stmt in zip(expected_idents, program.statements):
+        ident = stmt.name
+        assert isinstance(ident, Identifier)
+        assert ident.token.type == TokenType.IDENT
+        assert ident.token.literal == ei

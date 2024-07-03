@@ -56,7 +56,7 @@ class Lexer:
             case TokenType.SLASH:
                 token = Token(TokenType.SLASH, self._char)
             case TokenType.EOF:
-                token = Token(TokenType.EOF, self._char)
+                token = Token(TokenType.EOF, "")
             case _:
                 token = Token(TokenType.ILLEGAL, TokenType.ILLEGAL)
 

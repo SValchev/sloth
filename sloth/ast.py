@@ -43,11 +43,11 @@ class Identifier(Expression):
     token: Token
     value: str
 
-    def expression_node(self):
-        raise NotImplementedError()
-
     def token_literal(self) -> str:
         return self.token.literal
+
+    def expression_node(self):
+        raise NotImplementedError()
 
     def __str__(self) -> str:
         return self.value
