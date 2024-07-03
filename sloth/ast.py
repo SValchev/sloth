@@ -1,9 +1,12 @@
+from dataclasses import dataclass
 from typing import Optional, Protocol
 from .token import Token
 
 
 class Node(Protocol):
     def token_literal(self) -> str: ...
+
+    def __str__(self) -> str: ...
 
 
 class Statement(Node, Protocol):
@@ -26,11 +29,19 @@ class Program(Node):
     def add_statement(self, statement: Statement):
         self.statements.append(statement)
 
+    def __str__(self) -> str:
+        return " -> ".join(map(str, self.statements))
 
+
+@dataclass(frozen=True)
 class Identifier(Expression):
-    def __init__(self, token: Token, value: str) -> None:
-        self.token = token
-        self.value = value
+    """
+    var x = 5;
+    Where the :value: is the name of the identifier
+    """
+
+    token: Token
+    value: str
 
     def expression_node(self):
         raise NotImplementedError()
@@ -38,14 +49,15 @@ class Identifier(Expression):
     def token_literal(self) -> str:
         return self.token.literal
 
+    def __str__(self) -> str:
+        return self.value
 
+
+@dataclass(frozen=True)
 class VarStatement(Statement):
-    def __init__(
-        self, token: Token, name: Identifier, value: Optional[Expression] = None
-    ) -> None:
-        self.token: Token = token
-        self.name: Identifier = name
-        self.value: Optional[Expression] = value
+    token: Token
+    name: Identifier
+    value: Optional[Expression] = None
 
     def token_literal(self) -> str:
         return self.token.literal
@@ -53,14 +65,43 @@ class VarStatement(Statement):
     def statement_node(self):
         raise NotImplementedError()
 
+    def __str__(self) -> str:
+        return f"{self.token.literal} {str(self.name)} = {self.value};"
 
+
+@dataclass(frozen=True)
 class ReturnStatement(Statement):
-    def __init__(self, token, expression: Optional[Expression] = None) -> None:
-        self.token: Token = token
-        self.expression: Optional[Expression] = expression
+    token: Token
+    expression: Optional[Expression]
 
     def token_literal(self) -> str:
         return self.token.literal
 
     def statement_node(self):
         raise NotImplementedError()
+
+    def __str__(self) -> str:
+        return f"return {self.expression};"
+
+
+@dataclass(frozen=True)
+class ExpressionStatement(Statement):
+    """Used for one line expressions to be wrapped as statement, so they can me added to the Program/root
+    example:
+        x + 10
+        5 + 5
+    """
+
+    token: Token
+    expression: Optional[Expression]
+
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def statement_node(self):
+        raise NotImplementedError()
+
+    def __str__(self) -> str:
+        if self.expression:
+            return str(self.expression)
+        return ""

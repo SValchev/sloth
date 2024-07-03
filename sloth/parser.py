@@ -58,7 +58,7 @@ class Parser:
         return result
 
     def _parse_var_stmt(self) -> Optional[VarStatement]:
-        var_token = self._token
+        var_token: Token = self._token
 
         if not self._expect_peek(TokenType.IDENT):
             return None

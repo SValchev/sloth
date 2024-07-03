@@ -12,6 +12,13 @@ class Lexer:
 
     def next_token(self) -> Token:
         self._consume_spaces()
+
+        if self._char_is_letter():
+            # Can return keyword or identifier
+            return Token.from_word(self._read_word())
+        elif self._char_is_digit():
+            return Token(TokenType.INT, self._read_digit())
+
         token = None
         match self._char:
             case TokenType.ASSIGN:
@@ -48,16 +55,10 @@ class Lexer:
                 token = Token(TokenType.ASTERISK, self._char)
             case TokenType.SLASH:
                 token = Token(TokenType.SLASH, self._char)
-            case "\00":
-                token = Token(TokenType.EOF, "")
+            case TokenType.EOF:
+                token = Token(TokenType.EOF, self._char)
             case _:
-                if self._char_is_letter():
-                    # Can return keyword or identifier
-                    return Token.from_word(self._read_word())
-                elif self._char_is_digit():
-                    return Token(TokenType.INT, self._read_digit())
-                else:
-                    token = Token(TokenType.ILLEGAL, "")
+                token = Token(TokenType.ILLEGAL, TokenType.ILLEGAL)
 
         self._read_char()
         return token

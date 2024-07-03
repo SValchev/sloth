@@ -3,8 +3,8 @@ from enum import StrEnum, auto
 
 
 class TokenType(StrEnum):
-    EOF = auto()
-    ILLEGAL = auto()
+    EOF = "\00"
+    ILLEGAL = ""
 
     IDENT = auto()
     INT = auto()

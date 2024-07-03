@@ -57,3 +57,22 @@ def test_return_parser():
         assert stmt.token.literal == "return"
 
         assert not stmt.expression
+
+
+def test_identifier_expression_parser():
+    input_ = """ var a = 5;
+    var b = 10;
+    """
+
+    parser = Parser.from_input(input_)
+    program = parser.parse_program()
+
+    assert len(program.statements) == 3
+    assert not parser.errors
+
+    for stmt in program.statements:
+        assert isinstance(stmt, ReturnStatement)
+        assert stmt.token.type == TokenType.RETURN
+        assert stmt.token.literal == "return"
+
+        assert not stmt.expression
