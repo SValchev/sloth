@@ -34,6 +34,21 @@ class Program(Node):
 
 
 @dataclass(frozen=True)
+class IntegerLiteral(Expression):
+    token: Token
+    value: int
+
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def expression_node(self):
+        raise NotImplementedError()
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+
+@dataclass(frozen=True)
 class Identifier(Expression):
     """
     var x = 5;
@@ -72,7 +87,7 @@ class VarStatement(Statement):
 @dataclass(frozen=True)
 class ReturnStatement(Statement):
     token: Token
-    expression: Optional[Expression]
+    expression: Optional[Expression] = None
 
     def token_literal(self) -> str:
         return self.token.literal

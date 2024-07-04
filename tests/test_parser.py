@@ -1,4 +1,10 @@
-from sloth.ast import ExpressionStatement, Identifier, ReturnStatement, VarStatement
+from sloth.ast import (
+    ExpressionStatement,
+    Identifier,
+    IntegerLiteral,
+    ReturnStatement,
+    VarStatement,
+)
 from sloth.parser import Parser
 from sloth.token import TokenType
 
@@ -22,9 +28,9 @@ def test_var_parser():
         assert isinstance(stmt, VarStatement)
         assert stmt.token.type == TokenType.VAR
         assert stmt.token.literal == "var"
-        
-        ident = stmt.name 
-        assert isinstance(ident, Identifier) 
+
+        ident = stmt.name
+        assert isinstance(ident, Identifier)
         assert ident.token.type == TokenType.IDENT
         assert ident.value == expected_ident
 
@@ -42,7 +48,7 @@ def test_parser_generate_errors_with_var_statement():
 
 
 def test_return_parser():
-    input_ = """ return 5;
+    input_ = """return 5;
     return 10;
     return add(x, y);
     """
@@ -66,18 +72,41 @@ def test_identifier_expression_parser():
     bar
     """
 
-    expected_idents = ['foo', 'bar']
+    expected_idents = ["foo", "bar"]
 
     parser = Parser.from_input(input_)
     program = parser.parse_program()
 
     assert len(program.statements) == 2
     assert not parser.errors
-     
+
     for ei, stmt in zip(expected_idents, program.statements):
         assert isinstance(stmt, ExpressionStatement)
-        
+
         assert isinstance(stmt.expression, Identifier)
         assert stmt.expression.token.type == TokenType.IDENT
+        assert stmt.expression.value == ei
         assert stmt.expression.token.literal == ei
 
+
+def test_integer_expression_parser():
+    input_ = """5
+    10;
+    100 
+    """
+
+    expected = [5, 10, 100]
+
+    parser = Parser.from_input(input_)
+    program = parser.parse_program()
+
+    assert len(program.statements) == 3
+    assert not parser.errors
+
+    for e, stmt in zip(expected, program.statements):
+        assert isinstance(stmt, ExpressionStatement)
+
+        assert isinstance(stmt.expression, IntegerLiteral)
+        assert stmt.expression.token.type == TokenType.INT
+        assert stmt.expression.value == e
+        assert stmt.expression.token.literal == str(e)
