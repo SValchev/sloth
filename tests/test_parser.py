@@ -2,6 +2,7 @@ from sloth.ast import (
     ExpressionStatement,
     Identifier,
     IntegerLiteral,
+    PrefixExpression,
     ReturnStatement,
     VarStatement,
 )
@@ -105,8 +106,41 @@ def test_integer_expression_parser():
 
     for e, stmt in zip(expected, program.statements):
         assert isinstance(stmt, ExpressionStatement)
+        _check_expression_stmt_integer(stmt.expression, e)
 
-        assert isinstance(stmt.expression, IntegerLiteral)
-        assert stmt.expression.token.type == TokenType.INT
-        assert stmt.expression.value == e
-        assert stmt.expression.token.literal == str(e)
+
+def test_prefix_expression_parser():
+    input_ = """!10
+    -5
+    """
+
+    expected = [
+        ("!10", "!", 10),
+        ("-5", "-", 5),
+    ]
+
+    parser = Parser.from_input(input_)
+    program = parser.parse_program()
+
+    print("\n".join(map(repr, program.statements)))
+
+    assert len(program.statements) == 2
+    assert not parser.errors
+
+    for e, stmt in zip(expected, program.statements):
+        literal, prefix, as_int = e
+        assert isinstance(stmt, ExpressionStatement)
+        print(str(stmt.expression))
+        assert isinstance(stmt.expression, PrefixExpression)
+        prefix_stmt = stmt.expression
+        assert prefix_stmt.token.type == prefix
+        assert prefix_stmt.operator == prefix
+
+        _check_expression_stmt_integer(stmt.right, as_int)
+
+
+def _check_expression_stmt_integer(expression, expected:int):
+        assert isinstance(expression, IntegerLiteral)
+        assert expression.token.type == TokenType.INT
+        assert expression.value == expected
+        assert expression.token.literal == str(expected)

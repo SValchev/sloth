@@ -29,6 +29,8 @@ class Lexer:
                     token = Token(TokenType.ASSIGN, self._char)
             case TokenType.PLUS:
                 token = Token(TokenType.PLUS, self._char)
+            case TokenType.MINUS:
+                token = Token(TokenType.MINUS, self._char)
             case TokenType.LPAREN:
                 token = Token(TokenType.LPAREN, self._char)
             case TokenType.RPAREN:

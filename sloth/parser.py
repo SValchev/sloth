@@ -1,11 +1,12 @@
 from enum import IntEnum
-from typing import Callable, Optional
+from typing import Callable, Optional, Protocol
 from .token import Token, TokenType
 from .ast import (
     Expression,
     ExpressionStatement,
     Identifier,
     IntegerLiteral,
+    PrefixExpression,
     Program,
     ReturnStatement,
     Statement,
@@ -19,11 +20,11 @@ class ParsingError:
         self.message = message
 
 
-def parse_identifier(parser: "Parser"):
+def parse_identifier(parser: "Parser") -> Identifier:
     return Identifier(parser._token, parser._token.literal)
 
 
-def parse_integer(parser: "Parser"):
+def parse_integer(parser: "Parser") -> IntegerLiteral:
     value = parser._token.literal
     if not value.isnumeric():
         raise ValueError(f"Value expected to be integer but got {value}")
@@ -31,14 +32,28 @@ def parse_integer(parser: "Parser"):
     return IntegerLiteral(parser._token, int(value))
 
 
+def parse_prefix_expression(parser: "Parser") -> PrefixExpression:
+    token = Token(literal=parser._token.literal, type=parser._token.type)
+
+    parser._next_token()
+    right_expression = parser._parse_expression(Precedence.PREFIX)
+
+    return PrefixExpression(token, token.literal, right_expression)
+
+
 class Precedence(IntEnum):
     LOWEST = 1
+    PREFIX = 2
 
+class ParseExpression(Protocol):
+    def __call__(self, parser: "Parser") -> Expression: ...
 
 class Parser:
-    _PREFIX_REGISTRY: dict[TokenType, Callable] = {
+    _PREFIX_REGISTRY: dict[TokenType, ParseExpression] = {
         TokenType.IDENT: parse_identifier,
         TokenType.INT: parse_integer,
+        TokenType.BANG: parse_prefix_expression,
+        TokenType.MINUS: parse_prefix_expression,
     }
 
     _INFIX_REGISTRY: dict[TokenType, Callable] = {}
@@ -68,7 +83,7 @@ class Parser:
 
         return program
 
-    def _parse_statement(self) -> Optional[Statement]:
+    def _parse_statement(self) -> Statement | None:
         match self._token.type:
             case TokenType.VAR:
                 return self._parse_var_stmt()
@@ -90,10 +105,10 @@ class Parser:
 
         return result
 
-    def _parse_expression(self, precedence: int) -> Optional[Expression]:
+    def _parse_expression(self, precedence: int) -> Expression | None:
         expression_token: Token = self._token
 
-        prefix_parser = self._PREFIX_REGISTRY.get(expression_token.type)
+        prefix_parser: ParseExpression | None = self._PREFIX_REGISTRY.get(expression_token.type)
 
         if prefix_parser:
             return prefix_parser(self)

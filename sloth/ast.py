@@ -120,3 +120,25 @@ class ExpressionStatement(Statement):
         if self.expression:
             return str(self.expression)
         return ""
+
+
+@dataclass(frozen=True)
+class PrefixExpression(Expression):
+    """Used for one line expressions to be wrapped as statement, so they can me added to the Program/root
+    example:
+        x + 10
+        5 + 5
+    """
+
+    token: Token
+    operator: str
+    right: Optional[Expression]
+
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def expression_node(self):
+        raise NotImplementedError()
+
+    def __str__(self) -> str:
+        return f"({self.token.literal}{str(self.right)})"
