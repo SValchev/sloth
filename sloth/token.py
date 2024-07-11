@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from enum import StrEnum, auto
 
 
@@ -59,3 +59,9 @@ class Token:
     def from_word(cls, word: str) -> "Token":
         token_type = _keywords.get(word, TokenType.IDENT)
         return Token(token_type, word)
+
+    @classmethod
+    def copy(cls, other: "Token"):
+        if not isinstance(other, cls):
+            raise ValueError("Other is not type same type")
+        return cls(**asdict(other))

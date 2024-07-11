@@ -1,10 +1,11 @@
-from enum import IntEnum
-from typing import Callable, Optional, Protocol
+from enum import IntEnum, auto
+from typing import Optional, Protocol
 from .token import Token, TokenType
 from .ast import (
     Expression,
     ExpressionStatement,
     Identifier,
+    InfixExpression,
     IntegerLiteral,
     PrefixExpression,
     Program,
@@ -15,9 +16,12 @@ from .ast import (
 from .lexer import Lexer
 
 
-class ParsingError:
+class ParsingError(Exception):
     def __init__(self, message: str) -> None:
         self.message = message
+
+    def __str__(self) -> str:
+        return self.message
 
 
 def parse_identifier(parser: "Parser") -> Identifier:
@@ -33,30 +37,71 @@ def parse_integer(parser: "Parser") -> IntegerLiteral:
 
 
 def parse_prefix_expression(parser: "Parser") -> PrefixExpression:
-    token = Token(literal=parser._token.literal, type=parser._token.type)
-
+    token = Token.copy(parser._token)
     parser._next_token()
     right_expression = parser._parse_expression(Precedence.PREFIX)
 
     return PrefixExpression(token, token.literal, right_expression)
 
 
-class Precedence(IntEnum):
-    LOWEST = 1
-    PREFIX = 2
+def parse_infix_expression(parser: "Parser", left: Expression) -> InfixExpression:
+    token = Token.copy(parser._token)
 
-class ParseExpression(Protocol):
+    current_precedence: Precedence = parser._current_precedence()
+    parser._next_token()
+    right_expression: Expression | None = parser._parse_expression(current_precedence)
+
+    return InfixExpression(token, token.literal, left, right_expression)
+
+
+class Precedence(IntEnum):
+    LOWEST = auto()
+    EQUALS = auto()  # ==
+    LESS_GREATER = auto()  # > or <
+    SUM = auto()  # + or -
+    PRODUCT = auto()  # / or *
+    PREFIX = auto()  # -x or !x
+    CALL = auto()  # my_function(call)
+
+
+precedence_mapper = {
+    TokenType.EQ: Precedence.EQUALS,
+    TokenType.NOT_EQ: Precedence.EQUALS,
+    TokenType.LT: Precedence.LESS_GREATER,
+    TokenType.GT: Precedence.LESS_GREATER,
+    TokenType.PLUS: Precedence.SUM,
+    TokenType.MINUS: Precedence.SUM,
+    TokenType.SLASH: Precedence.PRODUCT,
+    TokenType.ASTERISK: Precedence.PRODUCT,
+}
+
+
+class ParsePrefixExpression(Protocol):
     def __call__(self, parser: "Parser") -> Expression: ...
 
+
+class ParseInfixExpression(Protocol):
+    def __call__(self, parser: "Parser", left: Expression) -> Expression: ...
+
+
 class Parser:
-    _PREFIX_REGISTRY: dict[TokenType, ParseExpression] = {
+    _PREFIX_REGISTRY: dict[TokenType, ParsePrefixExpression] = {
         TokenType.IDENT: parse_identifier,
         TokenType.INT: parse_integer,
         TokenType.BANG: parse_prefix_expression,
         TokenType.MINUS: parse_prefix_expression,
     }
 
-    _INFIX_REGISTRY: dict[TokenType, Callable] = {}
+    _INFIX_REGISTRY: dict[TokenType, ParseInfixExpression] = {
+        TokenType.EQ: parse_infix_expression,
+        TokenType.NOT_EQ: parse_infix_expression,
+        TokenType.LT: parse_infix_expression,
+        TokenType.GT: parse_infix_expression,
+        TokenType.PLUS: parse_infix_expression,
+        TokenType.MINUS: parse_infix_expression,
+        TokenType.ASTERISK: parse_infix_expression,
+        TokenType.SLASH: parse_infix_expression,
+    }
 
     def __init__(self, lexer: Lexer) -> None:
         self.errors: list[ParsingError] = []
@@ -105,20 +150,38 @@ class Parser:
 
         return result
 
-    def _parse_expression(self, precedence: int) -> Expression | None:
+    def _peek_precedence(self):
+        return precedence_mapper.get(self._peek_token.type, Precedence.LOWEST)
+
+    def _current_precedence(self):
+        return precedence_mapper.get(self._token.type, Precedence.LOWEST)
+
+    def _parse_expression(self, precedence: Precedence) -> Expression | None:
         expression_token: Token = self._token
 
-        prefix_parser: ParseExpression | None = self._PREFIX_REGISTRY.get(expression_token.type)
+        prefix_parser: ParsePrefixExpression | None = self._PREFIX_REGISTRY.get(
+            expression_token.type
+        )
 
-        if prefix_parser:
-            return prefix_parser(self)
+        if not prefix_parser:
+            self.errors.append(
+                ParsingError(f"No prefix parser for {expression_token.type}")
+            )
+            return None
 
-        infix_parser = self._INFIX_REGISTRY.get(expression_token.type)
+        left: Expression = prefix_parser(self)
 
-        if infix_parser:
-            return infix_parser(self)
+        semicolon = TokenType.SEMICOLON
+        while not self._token_is(semicolon) and precedence < self._peek_precedence():
+            if self._peek_token.type not in self._INFIX_REGISTRY:
+                return left
 
-        return None
+            infix: ParseInfixExpression = self._INFIX_REGISTRY[self._peek_token.type]
+
+            self._next_token()
+            left = infix(self, left)
+
+        return left
 
     def _parse_expression_stmt(self) -> ExpressionStatement:
         expression: Optional[Expression] = self._parse_expression(Precedence.LOWEST)
@@ -132,6 +195,7 @@ class Parser:
         var_token: Token = self._token
         if not self._expect_peek(TokenType.IDENT):
             return None
+
         ident_stmt = Identifier(self._token, self._token.literal)
         if not self._expect_peek(TokenType.ASSIGN):
             return None

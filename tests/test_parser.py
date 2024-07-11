@@ -1,6 +1,9 @@
+from dataclasses import dataclass
+
 from sloth.ast import (
     ExpressionStatement,
     Identifier,
+    InfixExpression,
     IntegerLiteral,
     PrefixExpression,
     ReturnStatement,
@@ -45,7 +48,7 @@ def test_parser_generate_errors_with_var_statement():
     parser = Parser.from_input(input_)
     parser.parse_program()
 
-    assert len(parser.errors) == 3
+    assert len(parser.errors) == 4
 
 
 def test_return_parser():
@@ -110,8 +113,8 @@ def test_integer_expression_parser():
 
 
 def test_prefix_expression_parser():
-    input_ = """!10
-    -5
+    input_ = """!10;
+    -5;
     """
 
     expected = [
@@ -122,25 +125,99 @@ def test_prefix_expression_parser():
     parser = Parser.from_input(input_)
     program = parser.parse_program()
 
-    print("\n".join(map(repr, program.statements)))
-
     assert len(program.statements) == 2
     assert not parser.errors
 
     for e, stmt in zip(expected, program.statements):
         literal, prefix, as_int = e
         assert isinstance(stmt, ExpressionStatement)
-        print(str(stmt.expression))
         assert isinstance(stmt.expression, PrefixExpression)
         prefix_stmt = stmt.expression
         assert prefix_stmt.token.type == prefix
         assert prefix_stmt.operator == prefix
 
-        _check_expression_stmt_integer(stmt.right, as_int)
+        _check_expression_stmt_integer(prefix_stmt.right, as_int)
 
 
-def _check_expression_stmt_integer(expression, expected:int):
-        assert isinstance(expression, IntegerLiteral)
-        assert expression.token.type == TokenType.INT
-        assert expression.value == expected
-        assert expression.token.literal == str(expected)
+def test_infix_expression_parser():
+    input_ = """
+    5 + 5;
+    5 - 5;
+    5 > 5;
+    5 < 5;
+    5 == 5;
+    5 != 5;
+    5 * 5;
+    5 / 5;
+    """
+
+    @dataclass(frozen=True)
+    class Expected:
+        value: str
+        left: int
+        operand: str
+        right: int
+
+    expected = [
+        Expected(*x)
+        for x in [
+            ("5 + 5", 5, "+", 5),
+            ("5 - 5", 5, "-", 5),
+            ("5 > 5", 5, ">", 5),
+            ("5 < 5", 5, "<", 5),
+            ("5 == 5", 5, "==", 5),
+            ("5 != 5", 5, "!=", 5),
+            ("5 * 5", 5, "*", 5),
+            ("5 / 5", 5, "/", 5),
+        ]
+    ]
+
+    parser = Parser.from_input(input_)
+    program = parser.parse_program()
+
+    assert len(program.statements) == len(expected)
+    assert not parser.errors
+
+    for e, stmt in zip(expected, program.statements):
+        assert isinstance(stmt, ExpressionStatement)
+        assert isinstance(stmt.expression, InfixExpression)
+
+        stmt = stmt.expression
+        assert stmt.token.type == e.operand
+        assert stmt.operator == e.operand
+
+        _check_expression_stmt_integer(stmt.right, e.right)
+        _check_expression_stmt_integer(stmt.left, e.left)
+
+
+def _check_expression_stmt_integer(expression, expected: int):
+    assert isinstance(expression, IntegerLiteral)
+    assert expression.token.type == TokenType.INT
+    assert expression.value == expected
+    assert expression.token.literal == str(expected)
+
+
+def test_operator_precedence():
+    tests = [
+        ("-a * b", "((-a) * b)"),
+        ("!-a", "(!(-a))"),
+        ("a + b + c", "((a + b) + c)"),
+        ("a + b - c", "((a + b) - c)"),
+        ("a * b * c", "((a * b) * c)"),
+        ("a * b / c", "((a * b) / c)"),
+        ("a + b / c", "(a + (b / c))"),
+        ("a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"),
+        ("3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"),
+        ("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
+        ("5 > 4 != 3 < 4", "((5 > 4) != (3 < 4))"),
+        ("3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"),
+    ]
+
+    for input_, expected in tests:
+        parser = Parser.from_input(input_)
+        program = parser.parse_program()
+        print(parser.errors)
+        print(program)
+        print("-" * 100)
+        print("\n" * 3)
+        assert str(program) == expected

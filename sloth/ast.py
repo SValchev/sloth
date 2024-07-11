@@ -30,7 +30,7 @@ class Program(Node):
         self.statements.append(statement)
 
     def __str__(self) -> str:
-        return " -> ".join(map(str, self.statements))
+        return "".join(map(str, self.statements))
 
 
 @dataclass(frozen=True)
@@ -81,7 +81,7 @@ class VarStatement(Statement):
         raise NotImplementedError()
 
     def __str__(self) -> str:
-        return f"{self.token.literal} {str(self.name)} = {self.value};"
+        return f"{self.token.literal} {self.name} = {self.value};"
 
 
 @dataclass(frozen=True)
@@ -117,19 +117,13 @@ class ExpressionStatement(Statement):
         raise NotImplementedError()
 
     def __str__(self) -> str:
-        if self.expression:
-            return str(self.expression)
-        return ""
+        if not self.expression:
+            return ""
+        return str(self.expression)
 
 
 @dataclass(frozen=True)
 class PrefixExpression(Expression):
-    """Used for one line expressions to be wrapped as statement, so they can me added to the Program/root
-    example:
-        x + 10
-        5 + 5
-    """
-
     token: Token
     operator: str
     right: Optional[Expression]
@@ -141,4 +135,21 @@ class PrefixExpression(Expression):
         raise NotImplementedError()
 
     def __str__(self) -> str:
-        return f"({self.token.literal}{str(self.right)})"
+        return f"({self.token.literal}{self.right})"
+
+
+@dataclass(frozen=True)
+class InfixExpression(Expression):
+    token: Token
+    operator: str
+    left: Expression | None
+    right: Expression | None
+
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def expression_node(self):
+        raise NotImplementedError()
+
+    def __str__(self) -> str:
+        return f"({self.left} {self.operator} {self.right})"
