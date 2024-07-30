@@ -107,3 +107,22 @@ def test_next_token_equal():
     ]
 
     validate_input(input_, expected)
+
+
+def test_bool():
+    input_ = """true == false
+    false != true
+    """
+
+    expected = [
+        # Row one
+        (TokenType.TRUE, "true"),
+        (TokenType.EQ, "=="),
+        (TokenType.FALSE, "false"),
+        # Rwo two
+        (TokenType.FALSE, "false"),
+        (TokenType.NOT_EQ, "!="),
+        (TokenType.TRUE, "true"),
+    ]
+
+    validate_input(input_, expected)

@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+import builtins
 
 from sloth.ast import (
+    BooleanLiteral,
     ExpressionStatement,
     Identifier,
     InfixExpression,
@@ -93,6 +95,27 @@ def test_identifier_expression_parser():
         assert stmt.expression.token.literal == ei
 
 
+def test_boolean_expression_parser():
+    input_ = """true;
+    false 
+    """
+
+    expected_idents = [True, False]
+
+    parser = Parser.from_input(input_)
+    program = parser.parse_program()
+
+    assert len(program.statements) == 2
+    assert not parser.errors
+
+    for ei, stmt in zip(expected_idents, program.statements):
+        assert isinstance(stmt, ExpressionStatement)
+
+        assert isinstance(stmt.expression, BooleanLiteral)
+        assert stmt.expression.value == ei
+        assert stmt.expression.token.literal == str(ei).lower()
+
+
 def test_integer_expression_parser():
     input_ = """5
     10;
@@ -115,28 +138,31 @@ def test_integer_expression_parser():
 def test_prefix_expression_parser():
     input_ = """!10;
     -5;
+    !true;
+    !false;
     """
 
     expected = [
         ("!10", "!", 10),
         ("-5", "-", 5),
+        ("!true", "!", True),
+        ("!false", "!", False),
     ]
 
     parser = Parser.from_input(input_)
     program = parser.parse_program()
 
-    assert len(program.statements) == 2
+    assert len(program.statements) == 4
     assert not parser.errors
 
     for e, stmt in zip(expected, program.statements):
-        literal, prefix, as_int = e
+        literal, prefix, as_value = e
         assert isinstance(stmt, ExpressionStatement)
         assert isinstance(stmt.expression, PrefixExpression)
         prefix_stmt = stmt.expression
         assert prefix_stmt.token.type == prefix
         assert prefix_stmt.operator == prefix
-
-        _check_expression_stmt_integer(prefix_stmt.right, as_int)
+        _check_expression_stmt_type(prefix_stmt.right, as_value)
 
 
 def test_infix_expression_parser():
@@ -149,6 +175,9 @@ def test_infix_expression_parser():
     5 != 5;
     5 * 5;
     5 / 5;
+    true == true
+    true != true
+    false == true
     """
 
     @dataclass(frozen=True)
@@ -169,6 +198,9 @@ def test_infix_expression_parser():
             ("5 != 5", 5, "!=", 5),
             ("5 * 5", 5, "*", 5),
             ("5 / 5", 5, "/", 5),
+            ("true == true", True, "==", True),
+            ("true != true", True, "!=", True),
+            ("false == true", False, "==", True),
         ]
     ]
 
@@ -186,8 +218,18 @@ def test_infix_expression_parser():
         assert stmt.token.type == e.operand
         assert stmt.operator == e.operand
 
-        _check_expression_stmt_integer(stmt.right, e.right)
-        _check_expression_stmt_integer(stmt.left, e.left)
+        _check_expression_stmt_type(stmt.right, e.right)
+        _check_expression_stmt_type(stmt.left, e.left)
+
+
+def _check_expression_stmt_type(expression, value):
+    match type(value):
+        case builtins.int:
+            _check_expression_stmt_integer(expression, value)
+        case builtins.bool:
+            _check_expression_stmt_boolean(expression, value)
+        case _:
+            raise ValueError("This should never happen")
 
 
 def _check_expression_stmt_integer(expression, expected: int):
@@ -195,6 +237,13 @@ def _check_expression_stmt_integer(expression, expected: int):
     assert expression.token.type == TokenType.INT
     assert expression.value == expected
     assert expression.token.literal == str(expected)
+
+
+def _check_expression_stmt_boolean(expression, expected: bool):
+    assert isinstance(expression, BooleanLiteral)
+    assert expression.token.type in (TokenType.FALSE, TokenType.TRUE)
+    assert expression.value == expected
+    assert expression.token.literal == str(expected).lower()
 
 
 def test_operator_precedence():
@@ -211,13 +260,11 @@ def test_operator_precedence():
         ("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
         ("5 > 4 != 3 < 4", "((5 > 4) != (3 < 4))"),
         ("3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"),
+        ("5 > 3 == true", "((5 > 3) == true)"),
+        ("5 > 3 == false", "((5 > 3) == false)"),
     ]
 
     for input_, expected in tests:
         parser = Parser.from_input(input_)
         program = parser.parse_program()
-        print(parser.errors)
-        print(program)
-        print("-" * 100)
-        print("\n" * 3)
         assert str(program) == expected

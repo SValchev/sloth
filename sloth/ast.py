@@ -49,6 +49,21 @@ class IntegerLiteral(Expression):
 
 
 @dataclass(frozen=True)
+class BooleanLiteral(Expression):
+    token: Token
+    value: bool
+
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def expression_node(self):
+        raise NotImplementedError()
+
+    def __str__(self) -> str:
+        return str(self.value).lower()
+
+
+@dataclass(frozen=True)
 class Identifier(Expression):
     """
     var x = 5;

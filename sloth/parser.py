@@ -12,6 +12,7 @@ from .ast import (
     ReturnStatement,
     Statement,
     VarStatement,
+    BooleanLiteral,
 )
 from .lexer import Lexer
 
@@ -34,6 +35,15 @@ def parse_integer(parser: "Parser") -> IntegerLiteral:
         raise ValueError(f"Value expected to be integer but got {value}")
 
     return IntegerLiteral(parser._token, int(value))
+
+
+def parse_boolean(parser: "Parser") -> BooleanLiteral:
+    value = parser._token.literal
+    if value not in (TokenType.FALSE, TokenType.TRUE):
+        raise ValueError(f"Value expected to true or false but got {value}")
+
+    value_return = value == TokenType.TRUE
+    return BooleanLiteral(parser._token, value_return)
 
 
 def parse_prefix_expression(parser: "Parser") -> PrefixExpression:
@@ -88,6 +98,8 @@ class Parser:
     _PREFIX_REGISTRY: dict[TokenType, ParsePrefixExpression] = {
         TokenType.IDENT: parse_identifier,
         TokenType.INT: parse_integer,
+        TokenType.TRUE: parse_boolean,
+        TokenType.FALSE: parse_boolean,
         TokenType.BANG: parse_prefix_expression,
         TokenType.MINUS: parse_prefix_expression,
     }
