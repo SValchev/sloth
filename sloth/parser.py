@@ -54,6 +54,17 @@ def parse_prefix_expression(parser: "Parser") -> PrefixExpression:
     return PrefixExpression(token, token.literal, right_expression)
 
 
+def parse_grouped_expression(parser: "Parser") -> Expression | None:
+    parser._next_token()
+    expression = parser._parse_expression(Precedence.LOWEST)
+
+    if not parser._peek_token_is(TokenType.RPAREN):
+        return
+
+    parser._next_token()
+    return expression
+
+
 def parse_infix_expression(parser: "Parser", left: Expression) -> InfixExpression:
     token = Token.copy(parser._token)
 
@@ -87,7 +98,7 @@ precedence_mapper = {
 
 
 class ParsePrefixExpression(Protocol):
-    def __call__(self, parser: "Parser") -> Expression: ...
+    def __call__(self, parser: "Parser") -> Expression | None: ...
 
 
 class ParseInfixExpression(Protocol):
@@ -102,6 +113,7 @@ class Parser:
         TokenType.FALSE: parse_boolean,
         TokenType.BANG: parse_prefix_expression,
         TokenType.MINUS: parse_prefix_expression,
+        TokenType.LPAREN: parse_grouped_expression,
     }
 
     _INFIX_REGISTRY: dict[TokenType, ParseInfixExpression] = {

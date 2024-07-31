@@ -262,6 +262,10 @@ def test_operator_precedence():
         ("3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"),
         ("5 > 3 == true", "((5 > 3) == true)"),
         ("5 > 3 == false", "((5 > 3) == false)"),
+        ("a + (b + c)", "(a + (b + c))"),
+        ("a * (b / c)", "(a * (b / c))"),
+        ("a * (b + c)", "(a * (b + c))"),
+        ("a * (b + c) / d", "((a * (b + c)) / d)"),
     ]
 
     for input_, expected in tests:
