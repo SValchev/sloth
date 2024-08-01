@@ -2,7 +2,9 @@ from dataclasses import dataclass
 import builtins
 
 from sloth.ast import (
+    BlockStatement,
     BooleanLiteral,
+    Expression,
     ExpressionStatement,
     Identifier,
     InfixExpression,
@@ -10,6 +12,7 @@ from sloth.ast import (
     PrefixExpression,
     ReturnStatement,
     VarStatement,
+    IfElseExpression,
 )
 from sloth.parser import Parser
 from sloth.token import TokenType
@@ -163,6 +166,41 @@ def test_prefix_expression_parser():
         assert prefix_stmt.token.type == prefix
         assert prefix_stmt.operator == prefix
         _check_expression_stmt_type(prefix_stmt.right, as_value)
+
+
+def test_if_else_expression_parser():
+    """if (<condition>) { consequence } else { <alternative> }"""
+    input_ = """if (1 == 5) {
+        x
+    } else {
+        y
+    }
+    """
+
+    expected = "if (1 == 5) { x } else { y }"
+
+    parser = Parser.from_input(input_)
+    program = parser.parse_program()
+
+    assert len(program.statements) == 1
+    assert not parser.errors
+
+    assert isinstance(program.statements[0], ExpressionStatement)
+    assert isinstance(program.statements[0].expression, IfElseExpression)
+    if_else_stmt = program.statements[0].expression
+
+    assert if_else_stmt.condition
+    assert isinstance(if_else_stmt.condition, Expression)
+
+    assert len(if_else_stmt.consequence.body) == 1
+    assert isinstance(if_else_stmt.consequence, BlockStatement)
+
+    assert if_else_stmt.alternative
+    assert len(if_else_stmt.alternative.body) == 1
+
+    assert if_else_stmt.token.type == TokenType.IF
+
+    assert str(if_else_stmt) == expected
 
 
 def test_infix_expression_parser():

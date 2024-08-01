@@ -2,9 +2,11 @@ from enum import IntEnum, auto
 from typing import Optional, Protocol
 from .token import Token, TokenType
 from .ast import (
+    BlockStatement,
     Expression,
     ExpressionStatement,
     Identifier,
+    IfElseExpression,
     InfixExpression,
     IntegerLiteral,
     PrefixExpression,
@@ -59,7 +61,7 @@ def parse_grouped_expression(parser: "Parser") -> Expression | None:
     expression = parser._parse_expression(Precedence.LOWEST)
 
     if not parser._peek_token_is(TokenType.RPAREN):
-        return
+        return None
 
     parser._next_token()
     return expression
@@ -73,6 +75,41 @@ def parse_infix_expression(parser: "Parser", left: Expression) -> InfixExpressio
     right_expression: Expression | None = parser._parse_expression(current_precedence)
 
     return InfixExpression(token, token.literal, left, right_expression)
+
+
+def parse_block_statement(parser: "Parser") -> BlockStatement:
+    token = parser._token.copy_self()
+    stmts = []
+
+    assert parser._token_is(TokenType.LBRACE)
+    parser._next_token()  # current token LBRACE, Skip it as we want to process only the body
+
+    while not parser._token_is(TokenType.RBRACE):
+        if stmt := parser._parse_statement():
+            stmts.append(stmt)
+        parser._next_token()  # Jump to RBRACE
+
+    parser._next_token()  # current token is RBRACE, skip it - close the body
+    return BlockStatement(token, stmts)
+
+
+def parse_if_else_statement(parser: "Parser") -> IfElseExpression | None:
+    token = Token.copy(parser._token)
+
+    if not parser._expect_peek(TokenType.LPAREN):
+        return None
+
+    condition = parser._parse_expression(Precedence.LOWEST)
+    if not parser._expect_peek(TokenType.LBRACE):
+        return None
+
+    consequance: BlockStatement = parse_block_statement(parser)
+
+    alternative = None
+    if parser._token_is(TokenType.ELSE) and parser._expect_peek(TokenType.LBRACE):
+        alternative = parse_block_statement(parser)
+
+    return IfElseExpression(token, condition, consequance, alternative)
 
 
 class Precedence(IntEnum):
@@ -107,6 +144,7 @@ class ParseInfixExpression(Protocol):
 
 class Parser:
     _PREFIX_REGISTRY: dict[TokenType, ParsePrefixExpression] = {
+        TokenType.IF: parse_if_else_statement,
         TokenType.IDENT: parse_identifier,
         TokenType.INT: parse_integer,
         TokenType.TRUE: parse_boolean,
@@ -226,6 +264,7 @@ class Parser:
 
         # Loop until the end of the expression
         while not self._token_is(TokenType.SEMICOLON):
+            # TODO: This will return None for now but must be populated
             self._next_token()
 
         return VarStatement(token=var_token, name=ident_stmt)

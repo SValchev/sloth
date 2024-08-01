@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Protocol
+from typing import Optional, Protocol, runtime_checkable
 from .token import Token
 
 
@@ -9,10 +9,12 @@ class Node(Protocol):
     def __str__(self) -> str: ...
 
 
+@runtime_checkable
 class Statement(Node, Protocol):
     def statement_node(self): ...
 
 
+@runtime_checkable
 class Expression(Node, Protocol):
     def expression_node(self): ...
 
@@ -81,6 +83,41 @@ class Identifier(Expression):
 
     def __str__(self) -> str:
         return self.value
+
+
+@dataclass(frozen=True)
+class BlockStatement(Statement):
+    token: Token
+    body: list[Statement]
+
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def statement_node(self):
+        raise NotImplementedError()
+
+    def __str__(self) -> str:
+        return "; ".join(map(str, self.body))
+
+
+@dataclass(frozen=True)
+class IfElseExpression(Expression):
+    token: Token
+    condition: Expression | None  # TODO: Remove None
+    consequence: BlockStatement
+    alternative: BlockStatement | None
+
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def expression_node(self):
+        raise NotImplementedError()
+
+    def __str__(self) -> str:
+        alternative = ""
+        if self.alternative:
+            alternative = f" else {{ {self.alternative} }}"
+        return f"if {self.condition} {{ {self.consequence} }}{alternative}"
 
 
 @dataclass(frozen=True)

@@ -60,6 +60,9 @@ class Token:
         token_type = _keywords.get(word, TokenType.IDENT)
         return Token(token_type, word)
 
+    def copy_self(self):
+        return self.copy(self)
+
     @classmethod
     def copy(cls, other: "Token"):
         if not isinstance(other, cls):
