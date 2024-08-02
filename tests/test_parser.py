@@ -6,6 +6,7 @@ from sloth.ast import (
     BooleanLiteral,
     Expression,
     ExpressionStatement,
+    FunctionLiteral,
     Identifier,
     InfixExpression,
     IntegerLiteral,
@@ -165,7 +166,33 @@ def test_prefix_expression_parser():
         prefix_stmt = stmt.expression
         assert prefix_stmt.token.type == prefix
         assert prefix_stmt.operator == prefix
-        _check_expression_stmt_type(prefix_stmt.right, as_value)
+        _check_expression_stmt_by_type(prefix_stmt.right, as_value)
+
+
+def test_function_literal_parser():
+    input_ = """func(x, y) { 
+        x + y
+    }
+    """
+    expected = "func(x, y) { (x + y) }"
+
+    parser = Parser.from_input(input_)
+    program = parser.parse_program()
+
+    assert len(program.statements) == 1
+    assert isinstance(program.statements[0], ExpressionStatement)
+    assert isinstance(program.statements[0].expression, FunctionLiteral)
+
+    fn = program.statements[0].expression
+
+    assert len(fn.arguments) == 2
+    for ident, name in zip(fn.arguments, ["x", "y"]):
+        assert isinstance(ident, Identifier)
+        assert ident.value == name
+
+    assert isinstance(fn.body, BlockStatement)
+
+    assert str(fn) == expected
 
 
 def test_if_else_expression_parser():
@@ -256,11 +283,11 @@ def test_infix_expression_parser():
         assert stmt.token.type == e.operand
         assert stmt.operator == e.operand
 
-        _check_expression_stmt_type(stmt.right, e.right)
-        _check_expression_stmt_type(stmt.left, e.left)
+        _check_expression_stmt_by_type(stmt.right, e.right)
+        _check_expression_stmt_by_type(stmt.left, e.left)
 
 
-def _check_expression_stmt_type(expression, value):
+def _check_expression_stmt_by_type(expression, value):
     match type(value):
         case builtins.int:
             _check_expression_stmt_integer(expression, value)

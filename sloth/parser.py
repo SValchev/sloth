@@ -5,6 +5,7 @@ from .ast import (
     BlockStatement,
     Expression,
     ExpressionStatement,
+    FunctionLiteral,
     Identifier,
     IfElseExpression,
     InfixExpression,
@@ -81,15 +82,16 @@ def parse_block_statement(parser: "Parser") -> BlockStatement:
     token = parser._token.copy_self()
     stmts = []
 
-    assert parser._token_is(TokenType.LBRACE)
-    parser._next_token()  # current token LBRACE, Skip it as we want to process only the body
+    # The start of the body - {, skip it
+    parser._assert_and_move(TokenType.LBRACE)
 
     while not parser._token_is(TokenType.RBRACE):
         if stmt := parser._parse_statement():
             stmts.append(stmt)
-        parser._next_token()  # Jump to RBRACE
+        parser._next_token()  # move to next stmt
 
-    parser._next_token()  # current token is RBRACE, skip it - close the body
+    # current token is RBRACE, skip it - close the body
+    parser._assert_and_move(TokenType.RBRACE)
     return BlockStatement(token, stmts)
 
 
@@ -110,6 +112,36 @@ def parse_if_else_statement(parser: "Parser") -> IfElseExpression | None:
         alternative = parse_block_statement(parser)
 
     return IfElseExpression(token, condition, consequance, alternative)
+
+
+def parse_fn_arguments(parser: "Parser") -> list[Identifier]:
+    parser._assert_and_move(TokenType.LPAREN)
+
+    identifiers = []
+    while not parser._token_is(TokenType.RPAREN):
+        identifiers.append(parse_identifier(parser))
+        parser._next_token()  # Skip current literal
+
+        if parser._token_is(TokenType.COMMA):
+            parser._next_token()  # Skip the comma
+
+    parser._assert_and_move(TokenType.RPAREN)
+    return identifiers
+
+
+def parse_function_literal(parser: "Parser") -> FunctionLiteral | None:
+    token = Token.copy(parser._token)
+    if not parser._expect_peek(TokenType.LPAREN):
+        return None
+
+    arguments = parse_fn_arguments(parser)
+
+    if not parser._token_is(TokenType.LBRACE):
+        return None
+
+    body: BlockStatement = parse_block_statement(parser)
+
+    return FunctionLiteral(token, arguments, body)
 
 
 class Precedence(IntEnum):
@@ -144,6 +176,7 @@ class ParseInfixExpression(Protocol):
 
 class Parser:
     _PREFIX_REGISTRY: dict[TokenType, ParsePrefixExpression] = {
+        TokenType.FUNC: parse_function_literal,
         TokenType.IF: parse_if_else_statement,
         TokenType.IDENT: parse_identifier,
         TokenType.INT: parse_integer,
@@ -268,6 +301,13 @@ class Parser:
             self._next_token()
 
         return VarStatement(token=var_token, name=ident_stmt)
+
+    def _assert_and_move(self, current_type: TokenType):
+        assert self._token_is(
+            current_type
+        ), f"Token {self._token} is but expected {current_type}"
+
+        self._next_token()
 
     def _expect_peek(self, expect: TokenType) -> bool:
         if self._peek_token_is(expect):
