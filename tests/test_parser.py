@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import builtins
+from math import exp
 
 from sloth.ast import (
     BlockStatement,
@@ -193,6 +194,35 @@ def test_function_literal_parser():
     assert isinstance(fn.body, BlockStatement)
 
     assert str(fn) == expected
+
+
+def test_function_argument_parser():
+    input_ = [
+        "func(x, y) {}",
+        "func() {}",
+    ]  # "func(1 + 2, 3 + 4) {}"]
+    expected = [
+        ("x", "y"),
+        [],
+    ]  # ["(1 + 2)", "(3 + 4)"]]
+
+    for i, e in zip(input_, expected):
+        _test_argument_parser(i, e)
+
+
+def _test_argument_parser(input_, arguments: list):
+    parser = Parser.from_input(input_)
+    program = parser.parse_program()
+
+    assert len(program.statements) == 1
+    assert isinstance(program.statements[0], ExpressionStatement)
+    assert isinstance(program.statements[0].expression, FunctionLiteral)
+
+    fn = program.statements[0].expression
+
+    assert len(fn.arguments) == len(arguments)
+    for ident, arg in zip(fn.arguments, arguments):
+        assert ident.value == arg
 
 
 def test_if_else_expression_parser():
