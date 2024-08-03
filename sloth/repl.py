@@ -5,8 +5,6 @@ import sys
 import atexit
 import readline
 
-import sys
-
 
 class ExitCommand(Exception):
     pass

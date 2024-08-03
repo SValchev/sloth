@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal, Optional, Protocol, runtime_checkable
+from typing import Optional, Protocol, runtime_checkable
 from .token import Token
 
 
@@ -101,6 +101,24 @@ class BlockStatement(Statement):
 
 
 @dataclass(frozen=True)
+class CallExpression(Expression):
+    token: Token
+    function: Expression  # Identifier or FunctionLiteral
+    arguments: list[Expression]
+
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def expression_node(self):
+        raise NotImplementedError()
+
+    def __str__(self) -> str:
+        arg_strs = ", ".join(map(str, self.arguments))
+
+        return f"{self.function}({arg_strs})"
+
+
+@dataclass(frozen=True)
 class FunctionLiteral(Expression):
     token: Token
     arguments: list[Identifier]
@@ -142,7 +160,7 @@ class IfElseExpression(Expression):
 class VarStatement(Statement):
     token: Token
     name: Identifier
-    value: Optional[Expression] = None
+    value: Expression
 
     def token_literal(self) -> str:
         return self.token.literal
@@ -157,7 +175,7 @@ class VarStatement(Statement):
 @dataclass(frozen=True)
 class ReturnStatement(Statement):
     token: Token
-    expression: Optional[Expression] = None
+    expression: Expression
 
     def token_literal(self) -> str:
         return self.token.literal

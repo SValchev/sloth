@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 import builtins
-from math import exp
 
 from sloth.ast import (
     BlockStatement,
     BooleanLiteral,
+    CallExpression,
     Expression,
     ExpressionStatement,
     FunctionLiteral,
@@ -22,8 +22,8 @@ from sloth.token import TokenType
 
 def test_var_parser():
     input_ = """var five = 5;
-    var ten = 10;
-    var one_hundred = 100;
+    var ten = 2 * 5;
+    var one_hundred = add(49, 2 * 25 + 1);
     """
 
     parser = Parser.from_input(input_)
@@ -31,11 +31,14 @@ def test_var_parser():
     program = parser.parse_program()
 
     expected_identifiers = ["five", "ten", "one_hundred"]
+    expected_exp = ["5", "(2 * 5)", "add(49, ((2 * 25) + 1))"]
 
     assert len(program.statements) == len(expected_identifiers)
     assert not parser.errors
 
-    for stmt, expected_ident in zip(program.statements, expected_identifiers):
+    for stmt, expected_ident, ee in zip(
+        program.statements, expected_identifiers, expected_exp
+    ):
         assert isinstance(stmt, VarStatement)
         assert stmt.token.type == TokenType.VAR
         assert stmt.token.literal == "var"
@@ -44,6 +47,9 @@ def test_var_parser():
         assert isinstance(ident, Identifier)
         assert ident.token.type == TokenType.IDENT
         assert ident.value == expected_ident
+
+        assert isinstance(stmt.value, Expression)
+        assert str(stmt.value) == ee
 
 
 def test_parser_generate_errors_with_var_statement():
@@ -64,18 +70,20 @@ def test_return_parser():
     return add(x, y);
     """
 
+    expected_expressions = ["5", "10", "add(x, y)"]
+
     parser = Parser.from_input(input_)
     program = parser.parse_program()
 
     assert len(program.statements) == 3
     assert not parser.errors
 
-    for stmt in program.statements:
+    for stmt, ee in zip(program.statements, expected_expressions):
         assert isinstance(stmt, ReturnStatement)
         assert stmt.token.type == TokenType.RETURN
         assert stmt.token.literal == "return"
 
-        assert not stmt.expression
+        assert str(stmt.expression) == ee
 
 
 def test_identifier_expression_parser():
@@ -168,6 +176,29 @@ def test_prefix_expression_parser():
         assert prefix_stmt.token.type == prefix
         assert prefix_stmt.operator == prefix
         _check_expression_stmt_by_type(prefix_stmt.right, as_value)
+
+
+def test_call_expression_parser():
+    input_ = "add(3, 2 * 3, 4 + 5)"
+
+    parser = Parser.from_input(input_)
+    program = parser.parse_program()
+
+    assert len(program.statements) == 1
+    assert isinstance(program.statements[0], ExpressionStatement)
+    assert isinstance(program.statements[0].expression, CallExpression)
+
+    exp = program.statements[0].expression
+
+    assert len(exp.arguments) == 3
+
+    for arg, exp_arg in zip(exp.arguments, ["3", "(2 * 3)", "(4 + 5)"]):
+        assert isinstance(arg, Expression)
+        assert str(arg) == exp_arg
+
+    assert isinstance(exp.function, Expression)
+
+    assert str(exp) == "add(3, (2 * 3), (4 + 5))"
 
 
 def test_function_literal_parser():

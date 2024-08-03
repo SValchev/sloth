@@ -1,8 +1,9 @@
 from enum import IntEnum, auto
-from typing import Optional, Protocol
+from typing import Protocol
 from .token import Token, TokenType
 from .ast import (
     BlockStatement,
+    CallExpression,
     Expression,
     ExpressionStatement,
     FunctionLiteral,
@@ -144,6 +145,78 @@ def parse_function_literal(parser: "Parser") -> FunctionLiteral | None:
     return FunctionLiteral(token, arguments, body)
 
 
+def parse_call_arguments(parser: "Parser") -> list[Expression]:
+    parser._assert_and_move(TokenType.LPAREN)
+    if parser._token_is(TokenType.RPAREN):
+        return []
+
+    exp = parser._parse_expression(Precedence.LOWEST)
+    if exp is None:
+        raise ValueError()
+
+    args = [exp]
+
+    while parser._peek_token_is(TokenType.COMMA):
+        parser._next_token()
+        parser._next_token()
+
+        exp = parser._parse_expression(Precedence.LOWEST)
+        if exp is None:
+            raise ValueError()
+        args.append(exp)
+
+    if not parser._expect_peek(TokenType.RPAREN):
+        return []
+
+    return args
+
+
+def parse_call_expression(parser: "Parser", left: Expression) -> CallExpression:
+    token = Token.copy(parser._token)
+    args = parse_call_arguments(parser)
+    return CallExpression(token, left, args)
+
+
+def parse_var_statement(parser: "Parser") -> VarStatement | None:
+    var_token: Token = parser._token
+    if not parser._expect_peek(TokenType.IDENT):
+        return None
+
+    ident_stmt = Identifier(parser._token, parser._token.literal)
+    if not parser._expect_peek(TokenType.ASSIGN):
+        return None
+
+    parser._next_token()  # Move assign
+
+    exp = parser._parse_expression(Precedence.LOWEST)
+
+    if parser._peek_token_is(TokenType.SEMICOLON):
+        parser._next_token()
+
+    return VarStatement(var_token, ident_stmt, exp)
+
+
+def parse_return_statement(parser: "Parser") -> ReturnStatement:
+    token = parser._token.copy_self()
+
+    parser._next_token()
+    exp = parser._parse_expression(Precedence.LOWEST)
+
+    if parser._peek_token_is(TokenType.SEMICOLON):
+        parser._next_token()
+
+    return ReturnStatement(token, exp)
+
+
+def parse_expression_statement(parser: "Parser") -> ExpressionStatement:
+    expression: Expression | None = parser._parse_expression(Precedence.LOWEST)
+
+    if parser._peek_token_is(TokenType.SEMICOLON):
+        parser._next_token()
+
+    return ExpressionStatement(parser._token, expression)
+
+
 class Precedence(IntEnum):
     LOWEST = auto()
     EQUALS = auto()  # ==
@@ -163,6 +236,7 @@ precedence_mapper = {
     TokenType.MINUS: Precedence.SUM,
     TokenType.SLASH: Precedence.PRODUCT,
     TokenType.ASTERISK: Precedence.PRODUCT,
+    TokenType.LPAREN: Precedence.CALL,
 }
 
 
@@ -188,6 +262,7 @@ class Parser:
     }
 
     _INFIX_REGISTRY: dict[TokenType, ParseInfixExpression] = {
+        TokenType.LPAREN: parse_call_expression,
         TokenType.EQ: parse_infix_expression,
         TokenType.NOT_EQ: parse_infix_expression,
         TokenType.LT: parse_infix_expression,
@@ -226,30 +301,10 @@ class Parser:
     def _parse_statement(self) -> Statement | None:
         match self._token.type:
             case TokenType.VAR:
-                return self._parse_var_stmt()
+                return parse_var_statement(self)
             case TokenType.RETURN:
-                return self._parse_return_stmt()
-        return self._parse_expression_stmt()
-
-    def _next_token(self) -> Token:
-        self._token = self._peek_token
-        self._peek_token = self._lexer.next_token()
-        return self._token
-
-    def _parse_return_stmt(self) -> ReturnStatement:
-        result = ReturnStatement(self._token)
-
-        # Loop until the end of the expression
-        while not self._token_is(TokenType.SEMICOLON):
-            self._next_token()
-
-        return result
-
-    def _peek_precedence(self):
-        return precedence_mapper.get(self._peek_token.type, Precedence.LOWEST)
-
-    def _current_precedence(self):
-        return precedence_mapper.get(self._token.type, Precedence.LOWEST)
+                return parse_return_statement(self)
+        return parse_expression_statement(self)
 
     def _parse_expression(self, precedence: Precedence) -> Expression | None:
         expression_token: Token = self._token
@@ -278,29 +333,16 @@ class Parser:
 
         return left
 
-    def _parse_expression_stmt(self) -> ExpressionStatement:
-        expression: Optional[Expression] = self._parse_expression(Precedence.LOWEST)
+    def _next_token(self) -> Token:
+        self._token = self._peek_token
+        self._peek_token = self._lexer.next_token()
+        return self._token
 
-        if self._peek_token_is(TokenType.SEMICOLON):
-            self._next_token()
+    def _peek_precedence(self):
+        return precedence_mapper.get(self._peek_token.type, Precedence.LOWEST)
 
-        return ExpressionStatement(self._token, expression)
-
-    def _parse_var_stmt(self) -> Optional[VarStatement]:
-        var_token: Token = self._token
-        if not self._expect_peek(TokenType.IDENT):
-            return None
-
-        ident_stmt = Identifier(self._token, self._token.literal)
-        if not self._expect_peek(TokenType.ASSIGN):
-            return None
-
-        # Loop until the end of the expression
-        while not self._token_is(TokenType.SEMICOLON):
-            # TODO: This will return None for now but must be populated
-            self._next_token()
-
-        return VarStatement(token=var_token, name=ident_stmt)
+    def _current_precedence(self):
+        return precedence_mapper.get(self._token.type, Precedence.LOWEST)
 
     def _assert_and_move(self, current_type: TokenType):
         assert self._token_is(
