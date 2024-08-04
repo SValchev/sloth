@@ -1,3 +1,4 @@
+from sloth.evaluation import evaluate
 from .parser import Parser
 
 from pathlib import Path
@@ -77,7 +78,8 @@ def relp():
         print(f"ERRORS: {errors}")
         return
 
-    print(program)
+    evaluated = evaluate(program)
+    print(evaluated.inspect())
 
 
 if __name__ == "__main__":

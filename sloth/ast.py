@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 from .token import Token
 
 
@@ -196,7 +196,7 @@ class ExpressionStatement(Statement):
     """
 
     token: Token
-    expression: Optional[Expression]
+    expression: Expression
 
     def token_literal(self) -> str:
         return self.token.literal
@@ -214,7 +214,7 @@ class ExpressionStatement(Statement):
 class PrefixExpression(Expression):
     token: Token
     operator: str
-    right: Optional[Expression]
+    right: Expression
 
     def token_literal(self) -> str:
         return self.token.literal
@@ -230,7 +230,7 @@ class PrefixExpression(Expression):
 class InfixExpression(Expression):
     token: Token
     operator: str
-    left: Expression | None
+    left: Expression
     right: Expression | None
 
     def token_literal(self) -> str:

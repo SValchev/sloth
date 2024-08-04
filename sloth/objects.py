@@ -1,0 +1,54 @@
+from dataclasses import dataclass
+from typing import Protocol
+
+from enum import StrEnum, unique
+
+
+@unique
+class Types(StrEnum):
+    INTEGER = "INTEGER"
+    BOOLEAN = "BOOLEAN"
+    NULL = "NULL"
+
+
+class ObjectType(str):
+    @classmethod
+    def from_type(cls, str_: Types):
+        return cls(str_)
+
+
+class SlothObject(Protocol):
+    def type(self) -> ObjectType: ...
+
+    def inspect(self) -> str: ...
+
+
+@dataclass(frozen=True, slots=True)
+class Integer(SlothObject):
+    value: int
+
+    def type(self) -> ObjectType:
+        return ObjectType.from_type(Types.INTEGER)
+
+    def inspect(self) -> str:
+        return str(self.value)
+
+
+@dataclass(frozen=True, slots=True)
+class Boolean(SlothObject):
+    value: bool
+
+    def type(self) -> ObjectType:
+        return ObjectType.from_type(Types.BOOLEAN)
+
+    def inspect(self) -> str:
+        return str(self.value)
+
+
+@dataclass(frozen=True, slots=True)
+class Null(SlothObject):
+    def type(self) -> ObjectType:
+        return ObjectType.from_type(Types.NULL)
+
+    def inspect(self) -> str:
+        return "Null"
