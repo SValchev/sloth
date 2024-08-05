@@ -1,6 +1,8 @@
 from .ast import (
     BooleanLiteral,
+    Expression,
     ExpressionStatement,
+    InfixExpression,
     IntegerLiteral,
     Node,
     PrefixExpression,
@@ -14,6 +16,12 @@ from .objects import Boolean, Integer, Null
 TRUE = Boolean(True)
 FALSE = Boolean(False)
 NULL = Null()
+
+
+def _native_to_boolean(native: bool) -> Boolean:
+    assert isinstance(native, bool)
+
+    return TRUE if native else FALSE
 
 
 def evaluate_program(program: Program):
@@ -60,6 +68,53 @@ def evaluate_prefix_expression(node: PrefixExpression):
             return NULL
 
 
+def evaluate_integer_infix_expression(left: Integer, right: Integer, operator: str):
+    match operator:
+        case "+":
+            return Integer(left.value + right.value)
+        case "-":
+            return Integer(left.value - right.value)
+        case "*":
+            return Integer(left.value * right.value)
+        case "/":
+            if right.value == 0:
+                return NULL  # TODO: Should throw error
+            return Integer(left.value // right.value)
+        case "==":
+            return _native_to_boolean(left.value == right.value)
+        case "!=":
+            return _native_to_boolean(left.value != right.value)
+        case ">":
+            return _native_to_boolean(left.value > right.value)
+        case "<":
+            return _native_to_boolean(left.value < right.value)
+        case _:
+            return NULL
+
+
+def evaluate_boolean_infix_expression(left: Boolean, right: Boolean, operator: str):
+    match operator:
+        case "==":
+            return _native_to_boolean(left.value == right.value)
+        case "!=":
+            return _native_to_boolean(left.value != right.value)
+        case _:
+            return NULL
+
+
+def evaluate_infix_expression(infix: InfixExpression):
+    left = evaluate(infix.left)
+    right = evaluate(infix.right)
+
+    match left, right:
+        case Integer(), Integer():
+            return evaluate_integer_infix_expression(left, right, infix.operator)
+        case Boolean(), Boolean():
+            return evaluate_boolean_infix_expression(left, right, infix.operator)
+        case _:
+            raise NotImplementedError(f"{left} and {right} combination not implemented")
+
+
 def evaluate(node: Node):
     match node:
         case Program():
@@ -69,6 +124,10 @@ def evaluate(node: Node):
         case IntegerLiteral():
             return Integer(node.value)
         case BooleanLiteral():
-            return TRUE if node.value else FALSE
+            return _native_to_boolean(node.value)
         case PrefixExpression():
             return evaluate_prefix_expression(node)
+        case InfixExpression():
+            return evaluate_infix_expression(node)
+        case _:
+            raise NotImplementedError(f"{type(node)} is still not implemented")

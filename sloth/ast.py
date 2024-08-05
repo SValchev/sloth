@@ -231,7 +231,7 @@ class InfixExpression(Expression):
     token: Token
     operator: str
     left: Expression
-    right: Expression | None
+    right: Expression
 
     def token_literal(self) -> str:
         return self.token.literal

@@ -87,3 +87,52 @@ def test_prefix_minus_invalid_eval():
         evaluated = input_eval(input)
         assert evaluated is expected
 
+
+def test_infix_expression_integer_math_eval():
+    tests = [
+        ("1 + 1", 2),
+        ("1 - 1", 0),
+        ("1 * 1", 1),
+        ("2 / 2", 1),
+        ("(1 + 1) + 1", 3),
+        ("1 * 1 + 1", 2),
+        ("2 * 2 / 2", 2),
+        ("(5 + 5) / 2", 5),
+    ]
+
+    for input, expected in tests:
+        evaluated = input_eval(input)
+        assert evaluated == Integer(expected)
+
+
+def test_infix_expression_integer_bool_eval():
+    tests = [
+        ("5 == 5", TRUE),
+        ("5 != 5", FALSE),
+        ("4 == 5", FALSE),
+        ("4 != 5", TRUE),
+        ("4 > 5", FALSE),
+        ("4 < 5", TRUE),
+        ("(4 + 1) != 5", FALSE),
+        ("(4 + 1) == 5", TRUE),
+    ]
+    for input, expected in tests:
+        evaluated = input_eval(input)
+        assert evaluated == expected
+
+
+def test_infix_expression_boolean_expression_eval():
+    tests = [
+        ("true == true", TRUE),
+        ("false != false", FALSE),
+        ("true == false", FALSE),
+        ("true != false", TRUE),
+        ("(2 > 1) == true", TRUE),
+        ("(2 < 1) == true", FALSE),
+        ("(2 < 1) != true", TRUE),
+        ("(2 < 1) != false", FALSE),
+    ]
+
+    for input, expected in tests:
+        evaluated = input_eval(input)
+        assert evaluated == expected
