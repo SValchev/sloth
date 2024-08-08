@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 from .token import Token
 
@@ -19,9 +19,9 @@ class Expression(Node, Protocol):
     def expression_node(self): ...
 
 
+@dataclass(frozen=True)
 class Program(Node):
-    def __init__(self) -> None:
-        self.statements: list[Statement] = []
+    statements: list[Statement] = field(default_factory=list)
 
     def token_literal(self) -> str:
         if not self.statements:
@@ -139,7 +139,7 @@ class FunctionLiteral(Expression):
 @dataclass(frozen=True)
 class IfElseExpression(Expression):
     token: Token
-    condition: Expression | None  # TODO: Remove None
+    condition: Expression
     consequence: BlockStatement
     alternative: BlockStatement | None
 

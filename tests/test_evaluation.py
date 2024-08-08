@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from sloth.ast import BlockStatement
 from sloth.evaluation import FALSE, TRUE, NULL, evaluate
 from sloth.objects import Boolean, Integer, Null
 from sloth.parser import Parser
@@ -135,4 +136,27 @@ def test_infix_expression_boolean_expression_eval():
 
     for input, expected in tests:
         evaluated = input_eval(input)
+        assert evaluated == expected
+
+
+def test_if_else_expression_eval():
+    tests = [
+        ("if(true) {10}", 10),
+        ("if(false) {10}", NULL),
+        ("if(5 > 2) {10}", 10),
+        ("if(5 < 2) {10}", NULL),
+        ("if(5 < 2) {10} else {5}", 5),
+        ("if(5 > 2) {10} else {5}", 10),
+        ("if(5) {10} else {5}", 10),
+        # ("if(null) {10} else {5}", 5), # TODO: Can you make null to pass
+        ("if(0) {10} else {5}", 5),
+        ("if(true) {10} else {5}", 10),
+        ("if(false) {10} else {5}", 5),
+    ]
+
+    for input, expected in tests:
+        evaluated = input_eval(input)
+        if isinstance(expected, int):
+            expected = Integer(expected)
+        print(input)
         assert evaluated == expected
