@@ -1,5 +1,6 @@
-from dataclasses import dataclass
-from typing import Protocol
+from dataclasses import dataclass, field
+import json
+from typing import Protocol, Any
 
 from enum import StrEnum, unique
 
@@ -10,6 +11,7 @@ class Types(StrEnum):
     BOOLEAN = "BOOLEAN"
     NULL = "NULL"
     FAULT = "FAULT"
+    ENVIRONMENT = "ENVIRONMENT"
 
 
 class ObjectType(str):

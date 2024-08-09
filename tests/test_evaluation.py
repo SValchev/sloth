@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from sloth.evaluation import FALSE, TRUE, NULL, evaluate
+from sloth.evaluation import FALSE, TRUE, NULL, Environment, evaluate
 from sloth.objects import Boolean, Fault, Integer
 from sloth.parser import Parser
 
@@ -8,7 +8,8 @@ def input_eval(input_: str):
     parser = Parser.from_input(input_)
 
     program = parser.parse_program()
-    return evaluate(program)
+    env = Environment()
+    return evaluate(program, env)
 
 
 def test_integer_eval():
@@ -173,14 +174,12 @@ def test_return_eval():
 
 def test_nested_return_eval():
     input = """ 
-    if (10 > 1){
+    if (10 > 1) {
         if (10 > 1) {
             return 10;
         }
-        
         return 1;
     }
-
     """
 
     evaluated = input_eval(input)
@@ -192,3 +191,18 @@ def test_divide_by_zero_fault():
 
     evaluated = input_eval(input)
     assert isinstance(evaluated, Fault)
+
+
+def test_var_int_statement_eval():
+    tests = [
+        ("var x = 5; x;", 5),
+        ("var x = 5 + 5; x;", 10),
+        ("var x = 5; var y = x; y;", 5),
+        ("var x = 5; var y = x + 5; y;", 10),
+        ("var x = 5; var y = 5; var z = x + y; z;", 10),
+        ("var x = 5; var y = 5; var z = x + 5 + y; z;", 15),
+    ]
+
+    for input, expected in tests:
+        evaluated = input_eval(input)
+        assert evaluated == Integer(expected)

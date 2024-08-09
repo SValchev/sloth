@@ -162,6 +162,9 @@ class VarStatement(Statement):
     name: Identifier
     value: Expression
 
+    def name_value(self):
+        return self.name.value
+
     def token_literal(self) -> str:
         return self.token.literal
 
