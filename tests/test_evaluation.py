@@ -1,7 +1,6 @@
 from dataclasses import dataclass
-from sloth.ast import BlockStatement
 from sloth.evaluation import FALSE, TRUE, NULL, evaluate
-from sloth.objects import Boolean, Integer, Null
+from sloth.objects import Boolean, Fault, Integer
 from sloth.parser import Parser
 
 
@@ -160,3 +159,36 @@ def test_if_else_expression_eval():
             expected = Integer(expected)
         print(input)
         assert evaluated == expected
+
+
+def test_return_eval():
+    input = """3 * 3 * 3;
+    return 10;
+    8 * 8 * 8;
+    """
+
+    evaluated = input_eval(input)
+    assert evaluated == Integer(10)
+
+
+def test_nested_return_eval():
+    input = """ 
+    if (10 > 1){
+        if (10 > 1) {
+            return 10;
+        }
+        
+        return 1;
+    }
+
+    """
+
+    evaluated = input_eval(input)
+    assert evaluated == Integer(1)
+
+
+def test_divide_by_zero_fault():
+    input = " 2 / 0"
+
+    evaluated = input_eval(input)
+    assert isinstance(evaluated, Fault)

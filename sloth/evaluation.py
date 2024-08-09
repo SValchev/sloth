@@ -1,7 +1,8 @@
-from typing import Any, Iterable
+from typing import Any
 from .ast import (
     BlockStatement,
     BooleanLiteral,
+    Expression,
     ExpressionStatement,
     IfElseExpression,
     InfixExpression,
@@ -9,10 +10,11 @@ from .ast import (
     Node,
     PrefixExpression,
     Program,
+    ReturnStatement,
     Statement,
 )
 
-from .objects import Boolean, Integer, Null, SlothObject
+from .objects import Boolean, Fault, Integer, Null
 
 
 # Native constants
@@ -22,22 +24,36 @@ NULL = Null()
 ZERO = Integer(0)
 
 
+class ReturnStopExcexution(Exception):
+    def __init__(self, expression: Expression, *args) -> None:
+        self.expression = expression
+        super().__init__(*args)
+
+
+class FaultStopExcexution(Exception):
+    def __init__(self, msg: str, *args) -> None:
+        self.fault = Fault(msg)
+        super().__init__(*args)
+
+
 def _native_to_boolean(native: bool) -> Boolean:
     assert isinstance(native, bool)
 
     return TRUE if native else FALSE
 
 
-def _evaluate_statements(statements: list[Statement]) -> Any:
+def evaluate_statements(statements: list[Statement]) -> Any:
     result = None
     for stmt in statements:
-        result = evaluate(stmt)
+        try:
+            result = evaluate(stmt)
+        except ReturnStopExcexution as e:
+            # No need to continue the body of the execution
+            return evaluate(e.expression)
+        except FaultStopExcexution as e:
+            return e.fault  # No need to continue the body of the execution
 
     return result
-
-
-def evaluate_program(program: Program) -> Any:
-    return _evaluate_statements(program.statements)
 
 
 def evaluate_prefix_boolean(boolean: BooleanLiteral):
@@ -73,7 +89,7 @@ def evaluate_prefix_expression(node: PrefixExpression) -> Integer | Boolean | Nu
         case PrefixExpression(operator="-"):
             return evaluate_prefix_minus(node)
         case _:
-            return NULL
+            raise FaultStopExcexution.from_str("")
 
 
 def evaluate_integer_infix_expression(
@@ -88,7 +104,7 @@ def evaluate_integer_infix_expression(
             return Integer(left.value * right.value)
         case "/":
             if right.value == 0:
-                return NULL  # TODO: Should throw error
+                raise FaultStopExcexution.from_str("can not divide by zero")
             return Integer(left.value // right.value)
         case "==":
             return _native_to_boolean(left.value == right.value)
@@ -133,12 +149,16 @@ def evaluate_if_else_expression(if_else: IfElseExpression):
     return evaluate(if_else.consequence)
 
 
+def evaluate_return_statement(return_stmt: ReturnStatement):
+    raise ReturnStopExcexution(return_stmt.expression)
+
+
 def evaluate(node: Node):
     match node:
         case Program():
-            return _evaluate_statements(node.statements)
+            return evaluate_statements(node.statements)
         case BlockStatement():
-            return _evaluate_statements(node.body)
+            return evaluate_statements(node.body)
         case ExpressionStatement():
             return evaluate(node.expression)
         case IntegerLiteral():
@@ -151,5 +171,7 @@ def evaluate(node: Node):
             return evaluate_infix_expression(node)
         case IfElseExpression():
             return evaluate_if_else_expression(node)
+        case ReturnStatement():
+            return evaluate_return_statement(node)
         case _:
             raise NotImplementedError(f"{type(node)} is still not implemented")

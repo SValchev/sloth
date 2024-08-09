@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Protocol, Any
+from typing import Protocol
 
 from enum import StrEnum, unique
 
@@ -9,6 +9,7 @@ class Types(StrEnum):
     INTEGER = "INTEGER"
     BOOLEAN = "BOOLEAN"
     NULL = "NULL"
+    FAULT = "FAULT"
 
 
 class ObjectType(str):
@@ -52,3 +53,14 @@ class Null(SlothObject):
 
     def inspect(self) -> str:
         return "Null"
+
+
+@dataclass(frozen=True, slots=True)
+class Fault(SlothObject):
+    message: str
+
+    def type(self) -> ObjectType:
+        return ObjectType.from_type(Types.FAULT)
+
+    def inspect(self) -> str:
+        return "Fault"
