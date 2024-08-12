@@ -206,3 +206,39 @@ def test_var_int_statement_eval():
     for input, expected in tests:
         evaluated = input_eval(input)
         assert evaluated == Integer(expected)
+
+
+def test_function_calls_int_statement_eval():
+    tests = [
+        ("var a = func() {return 5}; a()", 5),
+        ("var a = 5; var b = 5; var x = func(a, b) {return a + b}; x(a, b);", 10),
+        ("var a = 5;  var x = func(a) {return a + 5}; x(a)", 10),
+        ("var x = func(a) {return a + 5}; x((2 * 1) + 2 + 1)", 10),
+        (
+            """
+            var a = 5;
+            var b = 3;
+
+            var sum = func(a, b) { return a + b };
+            var b = 5;
+            sum(a, b);
+        """,
+            10,
+        ),
+        (
+            """
+            var a = 5;
+            var b = 5;
+
+            var sum = func(a, b) { return a + b };
+            var plusFive = func(a) { return a + 5 };
+
+            plusFive(sum(a, b));
+        """,
+            15,
+        ),
+    ]
+
+    for input, expected in tests:
+        evaluated = input_eval(input)
+        assert evaluated == Integer(expected)

@@ -2,8 +2,10 @@ from typing import Any
 from .ast import (
     BlockStatement,
     BooleanLiteral,
+    CallExpression,
     Expression,
     ExpressionStatement,
+    FunctionLiteral,
     Identifier,
     IfElseExpression,
     InfixExpression,
@@ -16,7 +18,7 @@ from .ast import (
     VarStatement,
 )
 
-from .objects import Boolean, Fault, Integer, Null
+from .objects import Boolean, Fault, Integer, Null, Function, Environment
 
 
 # Native constants
@@ -24,10 +26,6 @@ TRUE = Boolean(True)
 FALSE = Boolean(False)
 NULL = Null()
 ZERO = Integer(0)
-
-
-class Environment(dict):
-    pass
 
 
 class ReturnStopExcexution(Exception):
@@ -168,6 +166,7 @@ def evaluate_return_statement(return_stmt: ReturnStatement):
 def evaluate_var_statement(var_stmt: VarStatement, env: Environment):
     name = var_stmt.name_value()
     env[name] = evaluate(var_stmt.value, env)
+    return NULL
 
 
 def evaluate_identifier(ident: Identifier, env: Environment):
@@ -176,6 +175,27 @@ def evaluate_identifier(ident: Identifier, env: Environment):
     if name not in env:
         raise FaultStopExcexution(f"name {name} is not defined")
     return env[name]
+
+
+def evaluate_call_expression(call: CallExpression, env: Environment):
+    if call.name() not in env:
+        raise FaultStopExcexution(f"func name {call.name()} is not defined")
+
+    func: Function = env[call.name()]
+
+    if len(func.arguments) != len(call.arguments):
+        raise FaultStopExcexution(
+            f"arguments passed {len(call.arguments)}, but arguments expected {func.arguments}"
+        )
+
+    for ident, arg in zip(func.arguments, call.arguments):
+        func.env[ident.value] = evaluate(arg, env)
+
+    return evaluate(func.body, func.env)
+
+
+def evaluate_function_literal(func: FunctionLiteral, env: Environment):
+    return Function(func.arguments, func.body)
 
 
 def evaluate(node: Node, env: Environment):
@@ -202,5 +222,9 @@ def evaluate(node: Node, env: Environment):
             return evaluate_var_statement(node, env)
         case Identifier():
             return evaluate_identifier(node, env)
+        case FunctionLiteral():
+            return evaluate_function_literal(node, env)
+        case CallExpression():
+            return evaluate_call_expression(node, env)
         case _:
             raise NotImplementedError(f"{type(node)} is still not implemented")

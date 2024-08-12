@@ -1,4 +1,5 @@
-from sloth.evaluation import evaluate
+from sloth.objects import Environment, SlothObject
+from .evaluation import evaluate
 from .parser import Parser
 
 from pathlib import Path
@@ -78,7 +79,7 @@ def relp():
         print(f"ERRORS: {errors}")
         return
 
-    evaluated = evaluate(program)
+    evaluated = evaluate(program, Environment())
     print(evaluated.inspect())
 
 

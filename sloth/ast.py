@@ -101,24 +101,6 @@ class BlockStatement(Statement):
 
 
 @dataclass(frozen=True)
-class CallExpression(Expression):
-    token: Token
-    function: Expression  # Identifier or FunctionLiteral
-    arguments: list[Expression]
-
-    def token_literal(self) -> str:
-        return self.token.literal
-
-    def expression_node(self):
-        raise NotImplementedError()
-
-    def __str__(self) -> str:
-        arg_strs = ", ".join(map(str, self.arguments))
-
-        return f"{self.function}({arg_strs})"
-
-
-@dataclass(frozen=True)
 class FunctionLiteral(Expression):
     token: Token
     arguments: list[Identifier]
@@ -134,6 +116,30 @@ class FunctionLiteral(Expression):
         arg_strs = ", ".join(map(str, self.arguments))
 
         return f"{self.token_literal()}({arg_strs}) {{ {self.body} }}"
+
+
+@dataclass(frozen=True)
+class CallExpression(Expression):
+    token: Token
+    function: Identifier | FunctionLiteral  # Identifier or FunctionLiteral
+    arguments: list[Expression]
+
+    def name(self):
+        if isinstance(self.function, FunctionLiteral):
+            raise NotImplementedError("I still don't know how to handlet that")
+
+        return self.function.value
+
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def expression_node(self):
+        raise NotImplementedError()
+
+    def __str__(self) -> str:
+        arg_strs = ", ".join(map(str, self.arguments))
+
+        return f"{self.function}({arg_strs})"
 
 
 @dataclass(frozen=True)
