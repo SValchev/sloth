@@ -80,7 +80,7 @@ class Fault(SlothObject):
         return ObjectType.from_type(Types.FAULT)
 
     def inspect(self) -> str:
-        return "Fault"
+        return f"Fault: {self.message}"
 
 
 @dataclass(frozen=True, slots=True)

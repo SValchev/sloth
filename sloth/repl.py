@@ -1,5 +1,5 @@
 from sloth.objects import Environment, SlothObject
-from .evaluation import evaluate
+from .evaluation import evaluate, NULL
 from .parser import Parser
 
 from pathlib import Path
@@ -46,8 +46,9 @@ class History:
 def loop(main):
     def wrapper():
         try:
+            env = Environment()
             while True:
-                main()
+                main(env)
         except ExitCommand:
             print("Manually interrupted. Will be a slow Goodbye... I'm a sloth")
 
@@ -57,7 +58,7 @@ def loop(main):
 
 
 @loop
-def relp():
+def relp(env):
     try:
         input_ = input(">>> ")
     except KeyboardInterrupt:
@@ -79,8 +80,9 @@ def relp():
         print(f"ERRORS: {errors}")
         return
 
-    evaluated = evaluate(program, Environment())
-    print(evaluated.inspect())
+    evaluated = evaluate(program, env)
+    if evaluated is not NULL:
+        print(evaluated.inspect())
 
 
 if __name__ == "__main__":
