@@ -16,6 +16,9 @@ class Lexer:
         if self._char_is_letter():
             # Can return keyword or identifier
             return Token.from_word(self._read_word())
+        elif self._char_is_quotue():
+            return Token(TokenType.STRING, self._read_string())
+
         elif self._char_is_digit():
             return Token(TokenType.INT, self._read_digit())
 
@@ -73,6 +76,20 @@ class Lexer:
 
         self._position = self._read_position
         self._read_position += 1
+
+    def _char_is_quotue(self) -> bool:
+        return self._char == '"'
+
+    def _read_string(self) -> str:
+        self._read_char()
+        start = self._position
+
+        while self._char != '"':
+            self._read_char()
+
+        end = self._position
+        self._read_char()
+        return self._input[start:end]
 
     def _char_is_letter(self) -> bool:
         return self._char.isalpha() or self._char == "_"

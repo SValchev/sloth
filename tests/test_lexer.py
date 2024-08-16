@@ -9,6 +9,8 @@ def test_next_token_input1():
     var add = func(x, y) {
         x + y
     };
+
+    var name = "Stan"
     
     var result = func(forty, two);
     """
@@ -42,6 +44,11 @@ def test_next_token_input1():
         (TokenType.IDENT, "y"),
         (TokenType.RBRACE, "}"),
         (TokenType.SEMICOLON, ";"),
+        # name = Stan
+        (TokenType.VAR, "var"),
+        (TokenType.IDENT, "name"),
+        (TokenType.ASSIGN, "="),
+        (TokenType.STRING, "Stan"),
         # result
         (TokenType.VAR, "var"),
         (TokenType.IDENT, "result"),
@@ -107,6 +114,15 @@ def test_next_token_equal():
     ]
 
     validate_input(input_, expected)
+
+
+def test_string():
+    input = '"Hello World"'
+    expected = [
+        (TokenType.STRING, "Hello World"),
+    ]
+
+    validate_input(input, expected)
 
 
 def test_bool():

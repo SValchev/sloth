@@ -18,6 +18,8 @@ class TokenType(StrEnum):
     ASTERISK = "*"
     SLASH = "/"
 
+    STRING = "STRING"
+
     EQ = "=="
     NOT_EQ = "!="
 

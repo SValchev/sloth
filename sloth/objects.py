@@ -10,6 +10,7 @@ from sloth.ast import BlockStatement, Identifier
 
 @unique
 class Types(StrEnum):
+    STRING = "STRING"
     INTEGER = "INTEGER"
     BOOLEAN = "BOOLEAN"
     NULL = "NULL"
@@ -50,6 +51,17 @@ class Integer(SlothObject):
 
     def inspect(self) -> str:
         return str(self.value)
+
+
+@dataclass(frozen=True, slots=True)
+class String(SlothObject):
+    value: str
+
+    def type(self) -> ObjectType:
+        return ObjectType.from_type(Types.STRING)
+
+    def inspect(self) -> str:
+        return f'"{self.value}"'
 
 
 @dataclass(frozen=True, slots=True)

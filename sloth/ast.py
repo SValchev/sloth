@@ -51,6 +51,21 @@ class IntegerLiteral(Expression):
 
 
 @dataclass(frozen=True)
+class StringLiteral(Expression):
+    token: Token
+    value: str
+
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def expression_node(self):
+        raise NotImplementedError()
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+
+@dataclass(frozen=True)
 class BooleanLiteral(Expression):
     token: Token
     value: bool

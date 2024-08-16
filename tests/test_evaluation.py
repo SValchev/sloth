@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from sloth.evaluation import FALSE, TRUE, NULL, Environment, evaluate
-from sloth.objects import Boolean, Fault, Integer
+from sloth.objects import Boolean, Fault, Integer, String
 from sloth.parser import Parser
 
 
@@ -242,3 +242,28 @@ def test_function_calls_int_statement_eval():
     for input, expected in tests:
         evaluated = input_eval(input)
         assert evaluated == Integer(expected)
+
+
+def test_var_string_statement_eval():
+    tests = [
+        ('var x = "Stan"; x;', "Stan"),
+        ('var x = ""; x;', ""),
+    ]
+
+    for input, expected in tests:
+        evaluated = input_eval(input)
+        assert evaluated == String(expected)
+
+
+def test_string_concationation_eval():
+    tests = [
+        (
+            'var x = "Stan"; var y = " loves "; var z = "Diana"; x + y + z',
+            "Stan loves Diana",
+        ),
+        ('"Iva" + " and " + "Marti"', "Iva and Marti"),
+    ]
+
+    for input, expected in tests:
+        evaluated = input_eval(input)
+        assert evaluated == String(expected)

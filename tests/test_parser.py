@@ -13,6 +13,7 @@ from sloth.ast import (
     IntegerLiteral,
     PrefixExpression,
     ReturnStatement,
+    StringLiteral,
     VarStatement,
     IfElseExpression,
 )
@@ -129,7 +130,7 @@ def test_boolean_expression_parser():
         assert stmt.expression.token.literal == str(ei).lower()
 
 
-def test_integer_expression_parser():
+def test_integer_literal_parser():
     input_ = """5
     10;
     100 
@@ -146,6 +147,26 @@ def test_integer_expression_parser():
     for e, stmt in zip(expected, program.statements):
         assert isinstance(stmt, ExpressionStatement)
         _check_expression_stmt_integer(stmt.expression, e)
+
+
+def test_string_literal_parser():
+    input_ = """
+    "Stan"
+    "Diana"
+    "Iva"
+    """
+
+    expected = ["Stan", "Diana", "Iva"]
+
+    parser = Parser.from_input(input_)
+    program = parser.parse_program()
+
+    assert len(program.statements) == 3
+    assert not parser.errors
+
+    for e, stmt in zip(expected, program.statements):
+        assert isinstance(stmt, ExpressionStatement)
+        _check_expression_stmt_string(stmt.expression, e)
 
 
 def test_prefix_expression_parser():
@@ -361,6 +382,13 @@ def _check_expression_stmt_by_type(expression, value):
 def _check_expression_stmt_integer(expression, expected: int):
     assert isinstance(expression, IntegerLiteral)
     assert expression.token.type == TokenType.INT
+    assert expression.value == expected
+    assert expression.token.literal == str(expected)
+
+
+def _check_expression_stmt_string(expression, expected: str):
+    assert isinstance(expression, StringLiteral)
+    assert expression.token.type == TokenType.STRING
     assert expression.value == expected
     assert expression.token.literal == str(expected)
 

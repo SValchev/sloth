@@ -15,6 +15,7 @@ from .ast import (
     Program,
     ReturnStatement,
     Statement,
+    StringLiteral,
     VarStatement,
     BooleanLiteral,
 )
@@ -39,6 +40,11 @@ def parse_integer(parser: "Parser") -> IntegerLiteral:
         raise ValueError(f"Value expected to be integer but got {value}")
 
     return IntegerLiteral(parser._token, int(value))
+
+
+def parse_string(parser: "Parser") -> StringLiteral:
+    value = parser._token.literal
+    return StringLiteral(parser._token, value)
 
 
 def parse_boolean(parser: "Parser") -> BooleanLiteral:
@@ -254,6 +260,7 @@ class Parser:
         TokenType.IF: parse_if_else_statement,
         TokenType.IDENT: parse_identifier,
         TokenType.INT: parse_integer,
+        TokenType.STRING: parse_string,
         TokenType.TRUE: parse_boolean,
         TokenType.FALSE: parse_boolean,
         TokenType.BANG: parse_prefix_expression,

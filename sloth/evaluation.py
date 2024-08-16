@@ -1,3 +1,4 @@
+from io import IncrementalNewlineDecoder
 from typing import Any
 from .ast import (
     BlockStatement,
@@ -15,10 +16,20 @@ from .ast import (
     Program,
     ReturnStatement,
     Statement,
+    StringLiteral,
     VarStatement,
 )
 
-from .objects import Boolean, Fault, Integer, Null, Function, Environment
+from .objects import (
+    Boolean,
+    Fault,
+    Integer,
+    Null,
+    Function,
+    Environment,
+    ObjectType,
+    String,
+)
 
 
 # Native constants
@@ -38,6 +49,10 @@ class FaultStopExcexution(Exception):
     def __init__(self, msg: str, *args) -> None:
         self.fault = Fault(msg)
         super().__init__(*args)
+
+
+def raise_operator_not_supported(operator: str, type: ObjectType):
+    raise FaultStopExcexution(f'operator "{operator}" for {type} is not supported')
 
 
 def _native_to_boolean(native: bool) -> Boolean:
@@ -125,7 +140,7 @@ def evaluate_integer_infix_expression(
         case "<":
             return _native_to_boolean(left.value < right.value)
         case _:
-            return NULL
+            raise_operator_not_supported(operator, ZERO.type())
 
 
 def evaluate_boolean_infix_expression(left: Boolean, right: Boolean, operator: str):
@@ -135,7 +150,15 @@ def evaluate_boolean_infix_expression(left: Boolean, right: Boolean, operator: s
         case "!=":
             return _native_to_boolean(left.value != right.value)
         case _:
-            return NULL
+            raise_operator_not_supported(operator, ZERO.type())
+
+
+def evaluate_string_infix_expression(left: String, right: String, operator: str):
+    match operator:
+        case "+":
+            return String(left.value + right.value)
+        case _:
+            raise_operator_not_supported(operator, left.type())
 
 
 def evaluate_infix_expression(infix: InfixExpression, env):
@@ -143,6 +166,8 @@ def evaluate_infix_expression(infix: InfixExpression, env):
     right = evaluate(infix.right, env)
 
     match left, right:
+        case String(), String():
+            return evaluate_string_infix_expression(left, right, infix.operator)
         case Integer(), Integer():
             return evaluate_integer_infix_expression(left, right, infix.operator)
         case Boolean(), Boolean():
@@ -208,6 +233,8 @@ def evaluate(node: Node, env: Environment):
             return evaluate(node.expression, env)
         case IntegerLiteral():
             return Integer(node.value)
+        case StringLiteral():
+            return String(node.value)
         case BooleanLiteral():
             return _native_to_boolean(node.value)
         case PrefixExpression():
